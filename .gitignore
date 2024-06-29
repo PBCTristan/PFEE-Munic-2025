@@ -1,6 +1,12 @@
+# Heavy stuff
 simulator/DonkeySimLinux/
+
+# Logs
 simulator/mycar/logs/
+unitylog.txt
+*.log
+
+# Generated data
 simulator/mycar/data/
 simulator/scripts/generated_data
-unitylog.txt
 **/__pycache__/

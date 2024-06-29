@@ -1,8 +1,7 @@
-import numpy as np
-
 class Record:
-  def __init__(self):
+  def __init__(self, type):
     self.is_crash = False
+    self.type = type
     self.datas = []
     self.actions = []
 
@@ -13,6 +12,7 @@ class Record:
   def to_json(self):
     return {
       'iscrash': self.is_crash,
+      'type': self.type,
       'data': self.datas,
       'actions': self.actions
     }
