@@ -31,9 +31,9 @@ def play_simulation(env, options):
         case "straight":
             play_simulation_straight(env, options)
         case "turn":
-            pass
+            play_simulation_turn(env, options)
         case "random":
-            play_simulation_random(env, options)
+            pass
         case "fixed":
             pass
 
@@ -42,45 +42,17 @@ def play_simulation(env, options):
 def play_simulation_straight(env, options):
     simulations = Simulations.straight(options.number)
     noise = Simulations.noise(options.frames)
-    for i, pos in enumerate(simulations):
-        _ = env.reset()
-        logger.info(f"Running sim number {i}")
-        with open(f"generated_data/{options.type}_{i}.json", "w+") as f:
-            r = record.Record(options.type)
-            for i in range(options.frames):
-                act = pos + noise[i]
-                action = np.array(act)
-                # execute the action
-                _, _, done, info = env.step(action)
-                print(info["hit"])
-                # save the data
-                r.add_data(info, act.tolist())
-            json.dump(r.to_json(), f)
-        # Exit the scene
+    Simulations.simulationEnumarates(simulations, noise, env, options)
     env.close()
 
 
-def play_simulation_random(env, options):
+def play_simulation_turn(env, options):
     logger.info("playing simu with random curve")
     simulations = Simulations.randomTurnAngle(options.number)
     noise = Simulations.noise(options.frames)
-    for i, pos in enumerate(simulations):
-        # Reset the environment
-        env.reset()
-        logger.info(f"Running sim number {i}")
-        with open(f"generated_data/{options.type}_{i}.json", "w+") as f:
-            r = record.Record(options.type)
-            for _ in range(options.frames):
-                # Select an action
-                
-                act = pos + noise[i]
-                action = np.array(act)
-                
-                # execute the action
-                obv, reward, done, info = env.step(action)
-                r.add_data(info, action.tolist())
-            json.dump(r.to_json(), f)
+    Simulations.simulationEnumarates(simulations, noise, env, options)
     env.close()
+
 
 
 if __name__ == "__main__":
