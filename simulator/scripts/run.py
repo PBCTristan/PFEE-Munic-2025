@@ -61,16 +61,21 @@ def play_simulation_straight(env, options):
 
 
 def play_simulation_random(env, options):
-    for i in range(options.number):
+    logger.info("playing simu with random curve")
+    simulations = Simulations.randomTurnAngle(options.number)
+    noise = Simulations.noise(options.frames)
+    for i, pos in enumerate(simulations):
         # Reset the environment
-        obv = env.reset()
+        env.reset()
         logger.info(f"Running sim number {i}")
         with open(f"generated_data/{options.type}_{i}.json", "w+") as f:
             r = record.Record(options.type)
             for _ in range(options.frames):
                 # Select an action
-                action = env.action_space.sample()
-
+                
+                act = pos + noise[i]
+                action = np.array(act)
+                
                 # execute the action
                 obv, reward, done, info = env.step(action)
                 r.add_data(info, action.tolist())
