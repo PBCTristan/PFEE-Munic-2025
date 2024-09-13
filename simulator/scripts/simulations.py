@@ -2,6 +2,8 @@ import logging
 import numpy as np
 import record
 import json
+import gym
+import gym_donkeycar
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +40,7 @@ class Simulations:
 			action = np.array(act)
 
 			logger.info(f"Running sim number {i}")
-			with open(f"generated_data/{options.type}_{i}.json", "w+") as f:
+			with open(f"generated_data/{options.type}_{env.spec.id}_{i}.json", "w+") as f:
 				r = record.Record(options.type)
 				for _ in range(options.frames):
 					# Select an action

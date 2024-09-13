@@ -1,8 +1,6 @@
 import argparse
 import logging
-import os
 import gym
-import gym_donkeycar
 import numpy as np
 import json
 import record
@@ -33,7 +31,7 @@ def play_simulation(env, options):
         case "turn":
             play_simulation_turn(env, options)
         case "random":
-            pass
+            play_simulation_random(env, options)
         case "fixed":
             pass
 
@@ -51,6 +49,24 @@ def play_simulation_turn(env, options):
     simulations = Simulations.randomTurnAngle(options.number)
     noise = Simulations.noise(options.frames)
     Simulations.simulationEnumarates(simulations, noise, env, options)
+    env.close()
+
+
+def play_simulation_random(env, options):
+    for i in range(options.number):
+        # Reset the environment
+        _ = env.reset()
+        logger.info(f"Running sim number {i}")
+        with open(f"generated_data/random_{env.spec.id}_iter_{i}.json", "w+") as f:
+            r = record.Record(options.type)
+            for _ in range(options.frames):
+                # Select an action
+                action = env.action_space.sample()
+
+                # execute the action
+                _, _, _, info = env.step(action)
+                r.add_data(info, action.tolist())
+            json.dump(r.to_json(), f)
     env.close()
 
 
