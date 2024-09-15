@@ -59,16 +59,21 @@ def play_simulation_random(env, options):
         logger.info(f"Running sim number {i}")
         with open(f"generated_data/random_{env.spec.id}_iter_{i}.json", "w+") as f:
             r = record.Record(options.type)
+            last_action = [0, 0]
+            hit = "none"
             for _ in range(options.frames):
-                # Select an action
-                action = env.action_space.sample()
-
+                action = [0, 0]
+                if hit == "none":
+                    action = np.clip(
+                        last_action + (env.action_space.sample() * 0.15), -1, 1
+                    )
+                last_action = action
                 # execute the action
                 _, _, _, info = env.step(action)
-                r.add_data(info, action.tolist())
+                hit = info["hit"]
+                r.add_data(info)
             json.dump(r.to_json(), f)
     env.close()
-
 
 
 if __name__ == "__main__":
