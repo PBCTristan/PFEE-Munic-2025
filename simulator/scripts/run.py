@@ -5,6 +5,7 @@ import numpy as np
 import json
 import record
 from simulations import Simulations
+from arg_parser import create_argument_parser
 import sys
 import datetime
 from pathlib import Path
@@ -70,6 +71,10 @@ def play_simulation_random(env, options):
                 last_action = action
                 # execute the action
                 _, _, _, info = env.step(action)
+                if options.noise:
+                    # random sample between -0.1 and 0.1 (do not simplify the line for lisibility)
+                    info["accel"] += (0.1 + 0.1) * np.random.random_sample((3,)) - 0.1
+                    info["accel"] = (info["accel"]).tolist()
                 hit = info["hit"]
                 r.add_data(info)
             json.dump(r.to_json(), f)
@@ -77,55 +82,7 @@ def play_simulation_random(env, options):
 
 
 if __name__ == "__main__":
-    env_list = [
-        "donkey-warehouse-v0",
-        "donkey-generated-roads-v0",
-        "donkey-avc-sparkfun-v0",
-        "donkey-generated-track-v0",
-        "donkey-roboracingleague-track-v0",
-        "donkey-waveshare-v0",
-        "donkey-minimonaco-track-v0",
-        "donkey-warren-track-v0",
-        "donkey-circuit-launch-track-v0",
-    ]
-
-    parser = argparse.ArgumentParser(
-        description="Python utility to generate data from donkey car."
-    )
-
-    parser.add_argument("number", type=int, help="The number of files to generate.")
-    parser.add_argument(
-        "type",
-        choices=["straight", "turn", "random", "fixed"],
-        help="How are the tests conducted.",
-    )
-    parser.add_argument(
-        "--env",
-        choices=env_list + ["all"],
-        default="donkey-generated-track-v0",
-        help="Which map is used.",
-    )
-    parser.add_argument(
-        "--frames",
-        "-f",
-        required=False,
-        default=100,
-        type=int,
-        help="How many frames to record, better if between 100 and 10000. Default: 100.",
-    )
-    parser.add_argument(
-        "--logfile",
-        type=str,
-        required=False,
-        dest="log",
-        help="A file in which to save the logs.",
-    )
-    parser.add_argument(
-        "--autologfile",
-        action="store_true",
-        dest="autolog",
-        help="Create the logfiles automatically at a default location. Cannot be used in conjunction with --logfile.",
-    )
+    parser, env_list = create_argument_parser()
     args = parser.parse_args()
 
     if args.log:
@@ -137,7 +94,7 @@ if __name__ == "__main__":
     elif args.autolog:
         path = Path("logs")
         if not path.exists():
-            logger.warn("./logs path does not exists in current folder. Creating...")
+            logger.warning("./logs path does not exists in current folder. Creating...")
             path.mkdir()
         fileHandler = logging.FileHandler(
             f'./logs/{datetime.datetime.now().strftime("%Y_%m_%d-%Hh%Mm%Ss.log")}',
