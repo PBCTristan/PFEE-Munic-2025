@@ -18,12 +18,17 @@ def create_argument_parser():
         description="Python utility to generate data from donkey car."
     )
 
-    parser.add_argument("number", type=int, help="The number of files to generate.")
-    parser.add_argument(
-        "type",
-        choices=["straight", "turn", "random", "fixed"],
-        help="How are the tests conducted.",
+    parser.add_argument("--number",
+        type=lambda x: list(map(int, x.split(','))),
+        default=[1,1,1],
+        required=False,
+        help="comma seperated numbers of files to generate for each test type. ex:[X:straight, Y:turn, Z:random]\nDefault to 1,1,1"
     )
+    # parser.add_argument(
+    #     "type",
+    #     choices=["straight", "turn", "random", "fixed"],
+    #     help="How are the tests conducted.",
+    # )
     parser.add_argument(
         "--env",
         choices=env_list + ["all"],

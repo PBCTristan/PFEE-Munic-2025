@@ -26,40 +26,36 @@ def setup_env(env_name):
 
 
 def play_simulation(env, options):
-    match options.type:
-        case "straight":
-            play_simulation_straight(env, options)
-        case "turn":
-            play_simulation_turn(env, options)
-        case "random":
-            play_simulation_random(env, options)
-        case "fixed":
-            pass
+    if (options.number[0] != 0):
+        play_simulation_straight(env, options)
+    if (options.number[1] != 0):
+        play_simulation_turn(env, options)
+    if (options.number[2] != 0):
+        play_simulation_random(env, options)
+    env.close()
 
 
 # For now all the function does is setting the throttle to a number, without any variance
 def play_simulation_straight(env, options):
-    simulations = Simulations.straight(options.number)
+    simulations = Simulations.straight(options.number[0])
     noise = Simulations.noise(options.frames)
-    Simulations.simulationEnumarates(simulations, noise, env, options)
-    env.close()
+    Simulations.simulationEnumarates(simulations, noise, env, options, 0)
 
 
 def play_simulation_turn(env, options):
     logger.info("playing simu with random curve")
-    simulations = Simulations.randomTurnAngle(options.number)
+    simulations = Simulations.randomTurnAngle(options.number[1])
     noise = Simulations.noise(options.frames)
-    Simulations.simulationEnumarates(simulations, noise, env, options)
-    env.close()
+    Simulations.simulationEnumarates(simulations, noise, env, options, 1)
 
 
 def play_simulation_random(env, options):
-    for i in range(options.number):
+    for i in range(options.number[2]):
         # Reset the environment
         _ = env.reset()
         logger.info(f"Running sim number {i}")
         with open(f"generated_data/random_{env.spec.id}_iter_{i}.json", "w+") as f:
-            r = record.Record(options.type)
+            r = record.Record("random")
             last_action = [0, 0]
             hit = "none"
             for _ in range(options.frames):
@@ -78,7 +74,6 @@ def play_simulation_random(env, options):
                 hit = info["hit"]
                 r.add_data(info)
             json.dump(r.to_json(), f)
-    env.close()
 
 
 if __name__ == "__main__":
