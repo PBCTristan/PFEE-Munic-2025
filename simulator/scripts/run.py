@@ -98,6 +98,12 @@ if __name__ == "__main__":
         fileHandler.setLevel(logging.DEBUG)
         logger.addHandler(fileHandler)
 
+    if (len(args.number) < 3):
+        while (len(args.number) < 3):
+            args.number.append(0)
+    
+    print(f"numbers of runs for each type: {args.number}")
+
     if args.env != "all":
         env = setup_env(args.env)
         logger.info("Environment created, starting simulation...")

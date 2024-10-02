@@ -19,7 +19,7 @@ def create_argument_parser():
     )
 
     parser.add_argument("--number",
-        type=lambda x: list(map(int, x.split(','))),
+        type=lambda x: list(map(lambda y: y if y >= 0 else 0, map(int, x.split(',')))),
         default=[1,1,1],
         required=False,
         help="comma seperated numbers of files to generate for each test type. ex:[X:straight, Y:turn, Z:random]\nDefault to 1,1,1"
