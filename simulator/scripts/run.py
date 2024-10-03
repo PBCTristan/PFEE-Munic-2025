@@ -72,6 +72,9 @@ def play_simulation_random(env, options):
                 last_action = action
                 # execute the action
                 _, _, _, info = env.step(action)
+                noise = np.random.uniform(-0.1, 0.1, (1,3))
+                info["accel"] += noise
+                info["accel"] = info["accel"][0].tolist()
                 hit = info["hit"]
                 r.add_data(info)
             json.dump(r.to_json(), f)
@@ -89,18 +92,23 @@ def play_simulation_brake(env, options):
             acceleration_frames = np.random.randint(10, options.frames // 2)
             for _ in range(acceleration_frames):
                 action = [0, acceleration_value]
+                noise = np.random.uniform(-0.1, 0.1, (1,3))
                 # execute the action
                 _, _, _, info = env.step(action)
+                info["accel"] += noise
+                info["accel"] = info["accel"][0].tolist()
                 r.add_data(info)
             # Create a PID instance to control speed
             pid = PID(2, 0.2, 0.3, 1.0, -1.0, 0.1)
             command = None
             for _ in range(acceleration_frames, options.frames):
                 speed = info["speed"]
-                print(pid.values())
-                command = pid.update(speed, 0.01)
+                command = pid.update(speed, 0.001)
                 action = [0, command]
                 _, _, _, info = env.step(action)
+                noise = np.random.uniform(-0.1, 0.1, (1,3))
+                info["accel"] += noise
+                info["accel"] = info["accel"][0].tolist()
                 r.add_data(info)
             json.dump(r.to_json(), f)
     env.close()

@@ -48,7 +48,10 @@ class Simulations:
                     # Select an action
 
                     # execute the action
-                    obv, reward, done, info = env.step(action)
+                    _, _, _, info = env.step(action)
+                    noise = np.random.uniform(-0.1, 0.1, (1,3))
+                    info["accel"] += noise
+                    info["accel"] = info["accel"][0].tolist()
                     if info["hit"] != "none":
                         # hit detected, cutting motor by setting vector to 0
                         action = np.full(options.number, 0.0)
