@@ -20,6 +20,8 @@ class PID:
         error = setpoint - value if value >= 0.02 else 0
         if error == 0:
             return 0.0
+        if abs(error) < 0.1:  # Threshold when near stop
+            self.integral = 0
         p_out = self.kp * error
 
         self.integral += error * self.step
