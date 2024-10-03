@@ -450,7 +450,7 @@ class DonkeyUnitySimHandler(IMesgHandler):
         info = {
             "timestamp": self.last_received,
             #"cte": self.cte,
-            #"speed": self.speed,
+            "speed": self.speed,
             "hit": self.hit,
             "gyro": (self.gyro_x, self.gyro_y, self.gyro_z),
             "accel": (self.accel_x, self.accel_y, self.accel_z),

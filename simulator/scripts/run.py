@@ -8,6 +8,7 @@ from simulations import Simulations
 import sys
 import datetime
 from pathlib import Path
+from pid import PID
 
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,8 @@ logger.addHandler(stdout_handler)
 def setup_env(env_name):
     exe_path = "../DonkeySimLinux/donkey_sim.x86_64"
     port = 9091
-    conf = {"exe_path": exe_path, "port": port, "max_cte": sys.maxsize}
+    # We need throttle min to -1 to simulate braking
+    conf = {"exe_path": exe_path, "port": port, "max_cte": sys.maxsize, "throttle_min": -1.0}
     return gym.make(env_name, conf=conf)
 
 
@@ -32,8 +34,8 @@ def play_simulation(env, options):
             play_simulation_turn(env, options)
         case "random":
             play_simulation_random(env, options)
-        case "fixed":
-            pass
+        case "brake":
+            play_simulation_brake(env, options)
 
 
 # For now all the function does is setting the throttle to a number, without any variance
@@ -75,6 +77,30 @@ def play_simulation_random(env, options):
             json.dump(r.to_json(), f)
     env.close()
 
+def play_simulation_brake(env, options):
+    for i in range(options.number):
+        # Reset the environment
+        _ = env.reset()
+        logger.info(f"Running sim number {i}")
+        with open(f"generated_data/brake_{env.spec.id}_iter_{i}.json", "w+") as f:
+            r = record.Record(options.type)
+            info = None
+            for _ in range(80):
+                action = [0, 1]
+                # execute the action
+                _, _, _, info = env.step(action)
+                r.add_data(info)
+            pid = PID(3, 0.2, 0.3, 1.0, -1.0, 0.1)
+            command = None
+            for _ in range(50):
+                speed = info["speed"]
+                print(pid.values())
+                command = pid.update(speed, 0.0)
+                action = [0, command]
+                _, _, _, info = env.step(action)
+                r.add_data(info)
+            json.dump(r.to_json(), f)
+    env.close()
 
 if __name__ == "__main__":
     env_list = [
@@ -96,7 +122,7 @@ if __name__ == "__main__":
     parser.add_argument("number", type=int, help="The number of files to generate.")
     parser.add_argument(
         "type",
-        choices=["straight", "turn", "random", "fixed"],
+        choices=["straight", "turn", "random", "brake"],
         help="How are the tests conducted.",
     )
     parser.add_argument(
