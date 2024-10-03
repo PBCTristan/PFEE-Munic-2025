@@ -85,17 +85,20 @@ def play_simulation_brake(env, options):
         with open(f"generated_data/brake_{env.spec.id}_iter_{i}.json", "w+") as f:
             r = record.Record(options.type)
             info = None
-            for _ in range(80):
-                action = [0, 1]
+            acceleration_value = np.random.uniform()
+            acceleration_frames = np.random.randint(10, options.frames // 2)
+            for _ in range(acceleration_frames):
+                action = [0, acceleration_value]
                 # execute the action
                 _, _, _, info = env.step(action)
                 r.add_data(info)
-            pid = PID(3, 0.2, 0.3, 1.0, -1.0, 0.1)
+            # Create a PID instance to control speed
+            pid = PID(2, 0.2, 0.3, 1.0, -1.0, 0.1)
             command = None
-            for _ in range(50):
+            for _ in range(acceleration_frames, options.frames):
                 speed = info["speed"]
                 print(pid.values())
-                command = pid.update(speed, 0.0)
+                command = pid.update(speed, 0.01)
                 action = [0, command]
                 _, _, _, info = env.step(action)
                 r.add_data(info)
