@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
-accel_data = pd.read_csv(r"C:\Users\Gérard Grokoum\pfee-munic\signal\output.csv")
+accel_data = pd.read_csv(r"/home/thibault/pfee-munic/signal/device1-2024-08-19T07_34_34.csv")
 
 accel_data['Time'] = range(1, len(accel_data) + 1)
 
@@ -41,11 +41,11 @@ plt.show()
 
 plt.figure(figsize=(10, 6))
 
-plt.plot(accel_data['Time'], filtered_signal_x, color='blue', label='Signal X filtré')
+"""plt.pl6ot(accel_data['Time'], filtered_signal_x, color='blue', label='Signal X filtré')"""
 
 plt.plot(accel_data['Time'], filtered_signal_y, color='red', label='Signal Y filtré')
 
-plt.plot(accel_data['Time'], filtered_signal_z, color='green', label='Signal Z filtré')
+"""plt.plot(accel_data['Time'], filtered_signal_z, color='green', label='Signal Z filtré')"""
 plt.xlabel('Time')
 plt.ylabel('Signal')
 plt.title('Cross')

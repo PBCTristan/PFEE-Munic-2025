@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
 
-accel_data = pd.read_csv(r"C:\Users\Gérard Grokoum\pfee-munic\signal\output.csv")
+accel_data = pd.read_csv(r"/home/thibault/pfee-munic/signal/device1-2024-08-19T07_34_34.csv")
 
 signal_z = accel_data['z']
 

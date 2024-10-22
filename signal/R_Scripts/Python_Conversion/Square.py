@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-accel_data = pd.read_csv(r"C:\Users\Gérard Grokoum\pfee-munic\signal\output.csv")
+accel_data = pd.read_csv(r"/home/thibault/pfee-munic/signal/device1-2024-08-19T07_34_34.csv")
 accel_data['Time'] = range(1, len(accel_data) + 1)
 
 signal_x = accel_data['x']
