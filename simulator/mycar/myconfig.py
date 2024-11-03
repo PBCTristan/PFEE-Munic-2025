@@ -316,7 +316,7 @@ IMAGE_DEPTH = 1         # default RGB=3, make 1 for mono
 # }
 # 
 # #ODOMETRY
-# HAVE_ODOM = False                   # Do you have an odometer/encoder 
+# HAVE_ODOM = True                   # Do you have an odometer/encoder 
 # ENCODER_TYPE = 'GPIO'            # What kind of encoder? GPIO|Arduino|Astar 
 # MM_PER_TICK = 12.7625               # How much travel with a single tick, in mm. Roll you car a meter and divide total ticks measured by 1,000
 # ODOM_PIN = 13                        # if using GPIO, which GPIO board mode pin to use as input
@@ -617,7 +617,7 @@ IMAGE_DEPTH = 1         # default RGB=3, make 1 for mono
 # 
 # #RECORD OPTIONS
 # RECORD_DURING_AI = False        #normally we do not record during ai mode. Set this to true to get image and steering records for your Ai. Be careful not to use them to train.
-AUTO_CREATE_NEW_TUB = False     #create a new tub (tub_YY_MM_DD) directory when recording or append records to data directory directly
+AUTO_CREATE_NEW_TUB = True     #create a new tub (tub_YY_MM_DD) directory when recording or append records to data directory directly
 # 
 # #LED
 # HAVE_RGB_LED = False            #do you have an RGB LED like https://www.amazon.com/dp/B07BNRZWNF
