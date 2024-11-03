@@ -1,32 +1,33 @@
 import json
 import csv
 
-data = json.load(open(r'/home/thibault/pfee-munic/gary3.json', 'r'))
+import pandas as pd
+import numpy as np
+import sys
 
-writer = csv.writer(open('outpute.csv', 'w', newline=''))
-writer.writerow(['x', 'y', 'z'])
 
+def convert(input_filename, output_filename, noising):
+    with open(input_filename, 'r') as json_file:
+        data = json.load(json_file)
+    
+    with open(output_filename, 'w', newline='') as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow(['x', 'y', 'z'])
+        
+        for item in data['data']:
+            if noising == "True" or noising == "true":
+                noise = (0.1 + 0.5) * np.random.random_sample((3,)) - 0.6
+                x, y, z = item['accel'] + noise
+            else:
+                x, y, z = item['accel']
+            writer.writerow([x, y, z])
+    print(f'Processed {input_filename} and saved to {output_filename}')
 
-sum_x = 0
-sum_y = 0
-sum_z = 0
-
-count = 0
-for item in data['data']:
-    x, y, z = item['accel']
-    sum_x += x
-    sum_y += y
-    sum_z += z
-    count += 1
-
-sum_x /= count
-sum_y /= count
-sum_y /= count
-print(sum_x)
-print(sum_y)
-print(sum_z)
-for item in data['data']:
-    x, y, z = item['accel']
-    if (x != None and y != None and z != None):
-    	writer.writerow([x - sum_x, y - sum_y, z - sum_z])
-
+if __name__ == "__main__":
+    if len(sys.argv) != 4:
+        print("Usage: python script.py <input_csv_path> <output_csv_path> true/false")
+    else:
+        input_csv_path = sys.argv[1]
+        output_csv_path = sys.argv[2]
+        noising = sys.argv[3]
+        convert(input_csv_path, output_csv_path, noising)
