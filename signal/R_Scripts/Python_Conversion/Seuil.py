@@ -11,6 +11,8 @@ def original(input_data):
     accel_data = pd.read_csv(input_data)
     accel_data['Time'] = range(1, len(accel_data) + 1)
     signal_x = accel_data['x']
+    #signal_x = signal_x.iloc[:100]
+    #print(signal_x[signal_x.index<100])
     signal_y = accel_data['y']
     signal_z = accel_data['z']
     plt.figure(figsize=(10, 6))
@@ -64,7 +66,7 @@ def filter(input_data, x_std, y_std, z_std):
     plt.grid(True)
     plt.show()
 
-def fused(input_data, x_std, y_std, z_std):
+def fused(input_data, x_std, y_std, z_std, fuse_method):
     accel_data = pd.read_csv(input_data)
     accel_data['Time'] = range(1, len(accel_data) + 1)
     signal_x = accel_data['x']
@@ -117,12 +119,13 @@ if __name__ == "__main__":
                 x_std = sys.argv[3]
                 y_std = sys.argv[4]
                 z_std = sys.argv[5]
-                fused(input_csv_path, x_std, y_std, z_std)
+                fuse_method = sys.argv[6]
+                fused(input_csv_path, x_std, y_std, z_std, fuse_method)
                 print(f'Processed {input_csv_path} fused signal')
             case "filter":
                 x_std = sys.argv[3]
                 y_std = sys.argv[4]
                 z_std = sys.argv[5]
-                fuse_method = sys.argv[6]
-                filter(input_csv_path, x_std, y_std, z_std, fuse_method)
+                
+                filter(input_csv_path, x_std, y_std, z_std)
                 print(f'Processed {input_csv_path} filter signal')
