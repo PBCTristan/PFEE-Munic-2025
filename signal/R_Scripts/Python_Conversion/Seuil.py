@@ -28,7 +28,8 @@ def original(input_data):
     plt.grid(True)
     plt.show()
 
-def filter(input_data, x_std, y_std, z_std):
+def filter(input_data, x_std, y_std, z_std, method):
+    
     accel_data = pd.read_csv(input_data)
     accel_data['Time'] = range(1, len(accel_data) + 1)
     signal_x = accel_data['x']
@@ -53,18 +54,27 @@ def filter(input_data, x_std, y_std, z_std):
         threshold = np.mean(signal_z) + 2 * np.std(signal_z)
     signal_filtered_z = np.where(np.abs(signal_z) >= threshold, signal_z, 0)
 
-    plt.figure(figsize=(10, 6))
+    if (method == "show"):
+        plt.figure(figsize=(10, 6))
 
-    plt.plot(accel_data['Time'], signal_filtered, color='blue', label='Signal X filtré')
-    plt.plot(accel_data['Time'], signal_filtered_y, color='red', label='Signal Y filtré')
-    plt.plot(accel_data['Time'], signal_filtered_z, color='green', label='Signal Z filtré')
+        plt.plot(accel_data['Time'], signal_filtered, color='blue', label='Signal X filtré')
+        plt.plot(accel_data['Time'], signal_filtered_y, color='red', label='Signal Y filtré')
+        plt.plot(accel_data['Time'], signal_filtered_z, color='green', label='Signal Z filtré')
 
-    plt.xlabel('Time')
-    plt.ylabel('Signal')
-    plt.title('Seuil')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+        plt.xlabel('Time')
+        plt.ylabel('Signal')
+        plt.title('Seuil')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+    else:
+        output_file = input_data.replace(".csv", "_denoised.csv")
+        filtered_data = pd.DataFrame({
+            'x': signal_filtered,
+            'y': signal_filtered_y,
+            'z': signal_filtered_z
+        })
+        filtered_data.to_csv(output_file, index=False)
 
 def fused(input_data, x_std, y_std, z_std, fuse_method):
     accel_data = pd.read_csv(input_data)
@@ -107,7 +117,7 @@ def fused(input_data, x_std, y_std, z_std, fuse_method):
 
 if __name__ == "__main__":
     if len(sys.argv) > 8:
-        print("Usage: python script.py <input_csv_path> mode x_std y_std z_std mean/euclidian")
+        print("Usage: python script.py <input_csv_path> mode x_std y_std z_std mean/euclidian/show/save")
     else:
         input_csv_path = sys.argv[1]
         mode = sys.argv[2]
@@ -126,6 +136,7 @@ if __name__ == "__main__":
                 x_std = sys.argv[3]
                 y_std = sys.argv[4]
                 z_std = sys.argv[5]
-                
-                filter(input_csv_path, x_std, y_std, z_std)
+                method = sys.argv[6]
+
+                filter(input_csv_path, x_std, y_std, z_std, method)
                 print(f'Processed {input_csv_path} filter signal')
