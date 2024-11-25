@@ -449,12 +449,12 @@ class DonkeyUnitySimHandler(IMesgHandler):
 
         info = {
             "timestamp": self.last_received,
-            "cte": self.cte,
+            #"cte": self.cte,
             "speed": self.speed,
             "hit": self.hit,
             "gyro": (self.gyro_x, self.gyro_y, self.gyro_z),
             "accel": (self.accel_x, self.accel_y, self.accel_z),
-            "vel": (self.vel_x, self.vel_y, self.vel_z),
+            #"vel": (self.vel_x, self.vel_y, self.vel_z),
         }
 
         # Add the second image to the dict
