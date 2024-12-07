@@ -87,5 +87,31 @@ def main():
     with open(f'{file_wo_ext}_treated.json', "w") as f:
         json.dump(obj, f)
 
+
+
+def convert_clean_to_noised(source_filepath: str, target_filepath: str):
+    # Check if the filepath exists
+    if not os.path.exists(source_filepath):
+        print(f"Error: The file '{source_filepath}' does not exist.")
+        return
+
+    df = create_df(source_filepath)
+    
+    theta, phi, psi = (0 + 2 * m.pi) * np.random.random_sample((3,)) - 2 * m.pi
+    noised = noising(df)
+    df_rot = rotate_data(noised, theta, phi, psi)
+
+    obj = {
+        'iscrash': data['iscrash'],
+        'data': [{
+            'timestamp': x[0],
+            'accel_x': x[2],
+            'accel_y': x[3],
+            'accel_z': x[4],
+        } for x in df_rot.values]
+    }
+    with open(target_filepath, "w") as f:
+        json.dump(obj, f)
+
 if __name__ == "__main__":
     main()

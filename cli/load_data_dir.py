@@ -7,7 +7,7 @@ class dataDir():
         need_input = True
         extstr = None
         while need_input:
-            dataDirStr = """Give a path to the directory containing all the data you want to use
+            dataDirStr = """Give a valid directory path
 nothing if you want to exit"""
             print(dataDirStr)
             if (opt.path_to_data):
