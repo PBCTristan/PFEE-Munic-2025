@@ -7,6 +7,8 @@ import sys
 
 
 #accel_data = pd.read_csv("/home/thibault/pfee-munic/signal/enzo_1.csv")
+
+# Used to plot the signal
 def original(input_data):
     accel_data = pd.read_csv(input_data)
     accel_data['Time'] = range(1, len(accel_data) + 1)
@@ -28,6 +30,7 @@ def original(input_data):
     plt.grid(True)
     plt.show()
 
+# filter using the seuil method
 def filter(input_data, x_std, y_std, z_std, method):
     
     accel_data = pd.read_csv(input_data)
@@ -54,6 +57,7 @@ def filter(input_data, x_std, y_std, z_std, method):
         threshold = np.mean(signal_z) + 2 * np.std(signal_z)
     signal_filtered_z = np.where(np.abs(signal_z) >= threshold, signal_z, 0)
 
+    # If we don't want to save our filtered signal and just see it
     if (method == "show"):
         plt.figure(figsize=(10, 6))
 
@@ -76,6 +80,7 @@ def filter(input_data, x_std, y_std, z_std, method):
         })
         filtered_data.to_csv(output_file, index=False)
 
+# To fuse all 3 axys into one using norm or mean
 def fused(input_data, x_std, y_std, z_std, fuse_method):
     accel_data = pd.read_csv(input_data)
     accel_data['Time'] = range(1, len(accel_data) + 1)
