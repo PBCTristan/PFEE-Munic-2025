@@ -2,7 +2,7 @@ from cli.load_data_dir import dataDir
 from simulator.noising import noising as cctn
 
 opening_string = """welcome to the pfee cli pipeline
-choose amoug the folowing option by typing the corresponding number"""
+choose among the folowing options by typing the corresponding number"""
 menuString =  """---------------------------------------
 [1] print hello world
 [2] exit cli
