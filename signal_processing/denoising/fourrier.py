@@ -3,13 +3,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # filter using the fourrier method
-def filter(input_data, cutoff):
-    accel_data = pd.read_csv(input_data)
-    accel_data['Time'] = range(1, len(accel_data) + 1)
+def filter(dataframe, cutoff) -> pd.DataFrame:
+    dataframe['Time'] = range(1, len(dataframe) + 1)
 
-    signal_x = accel_data['x']
-    signal_y = accel_data['y']
-    signal_z = accel_data['z']
+    signal_x = dataframe['accel_x']
+    signal_y = dataframe['accel_y']
+    signal_z = dataframe['accel_z']
 
     signal_fft = np.fft.fft(signal_x)
     freq = np.fft.fftfreq(len(signal_x))
@@ -29,11 +28,14 @@ def filter(input_data, cutoff):
     signal_fft[np.abs(freq) > (1 - cutoff)] = 0
     signal_filtered_z = np.fft.ifft(signal_fft)
 
+    copy = dataframe.copy()
+    copy['accel_x'] = signal_filtered_x
+    copy['accel_y'] = signal_filtered_y
+    copy['accel_z'] = signal_filtered_z
+    return copy
 
-    return signal_filtered_x, signal_filtered_y, signal_filtered_z
 
-
-def fourrier_denoising(input_csv_path, cutoff):
-    x_result, y_result, z_result = filter(input_csv_path, cutoff)
-    print(f'Processed {input_csv_path} filter signal with fourrier')
-    return x_result, y_result, z_result
+def fourrier_denoising(dataframe, cutoff):
+    copy = filter(dataframe, cutoff)
+    print(f'Processed {dataframe} filter signal with fourrier')
+    return copy

@@ -3,13 +3,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # filter using the seuil method
-def filter(input_data, x_std, y_std, z_std):
+def filter(dataframe, x_std, y_std, z_std) -> pd.DataFrame:
     
-    accel_data = pd.read_csv(input_data)
-    accel_data['Time'] = range(1, len(accel_data) + 1)
-    signal_x = accel_data['x']
-    signal_y = accel_data['y']
-    signal_z = accel_data['z']
+    dataframe['Time'] = range(1, len(dataframe) + 1)
+    signal_x = dataframe['accel_x']
+    signal_y = dataframe['accel_y']
+    signal_z = dataframe['accel_z']
 
     if (x_std != None and x_std != ""): 
         threshold = np.mean(signal_x) + int(x_std) * np.std(signal_x)
@@ -29,7 +28,11 @@ def filter(input_data, x_std, y_std, z_std):
         threshold = np.mean(signal_z) + 2 * np.std(signal_z)
     signal_filtered_z = np.where(np.abs(signal_z) >= threshold, signal_z, 0)
 
-    return signal_filtered, signal_filtered_y, signal_filtered_z
+    copy = dataframe.copy()
+    copy['accel_x'] = signal_filtered
+    copy['accel_y'] = signal_filtered_y
+    copy['accel_z'] = signal_filtered_z
+    return copy
 
 # To fuse all 3 axys into one using norm or mean
 def fused(input_data, x_std, y_std, z_std, fuse_method):
@@ -71,15 +74,15 @@ def fused(input_data, x_std, y_std, z_std, fuse_method):
     plt.legend()
     plt.show()
 
-def seuil_denoising(input_csv_path, mode, x_std, y_std, z_std, method):
+def seuil_denoising(dataframe, mode, x_std, y_std, z_std, method):
     #if len(sys.argv) > 8:
     #    print("Usage: python script.py <input_csv_path> mode x_std y_std z_std mean/euclidian/show/save")
     #else:
         match mode:
             case "fused":
-                fused(input_csv_path, x_std, y_std, z_std, method)
-                print(f'Processed {input_csv_path} fused signal with seuil')
+                fused(dataframe, x_std, y_std, z_std, method)
+                print(f'Processed {dataframe} fused signal with seuil')
             case _:
-                x_result, y_result, z_result = filter(input_csv_path, x_std, y_std, z_std)
-                print(f'Processed {input_csv_path} filter signal with seuil')
-                return x_result, y_result, z_result
+                new_dataframe = filter(dataframe, x_std, y_std, z_std)
+                print(f'Processed {dataframe} filter signal with seuil')
+                return new_dataframe
