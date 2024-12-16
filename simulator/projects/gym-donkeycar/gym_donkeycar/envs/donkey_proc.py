@@ -21,7 +21,7 @@ class DonkeyUnityProcess:
             print(sim_path, "does not exist. you must start sim manually.")
             return
 
-        port_args = ["--port", str(port), "--host", str(host), "-logFile", "unitylog.txt"]
+        port_args = ["--port", str(port), "--host", str(host), "-logFile", "unitylog.txt", "-batchmode", "-nographics"]
 
         # Launch Unity environment
         self.proc1 = subprocess.Popen([sim_path] + port_args)

@@ -4,30 +4,34 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 # filter using the cross_axys method
-def filter(input_data):
-    accel_data = pd.read_csv(input_data)
-    accel_data['Time'] = range(1, len(accel_data) + 1)
+def filter(dataframe) -> pd.DataFrame:
 
-    signal_x = accel_data['x']
-    signal_y = accel_data['y']
-    signal_z = accel_data['z']
+    dataframe['Time'] = range(1, len(dataframe) + 1)
 
-    model = LinearRegression()
-    model.fit(accel_data[['x', 'y']], signal_z)
-    signal_filtered_z = model.predict(accel_data[['x', 'y']])
+    signal_x = dataframe['accel_x']
+    signal_y = dataframe['accel_y']
+    signal_z = dataframe['accel_z']
 
     model = LinearRegression()
-    model.fit(accel_data[['z', 'y']], signal_x)
-    signal_filtered_x = model.predict(accel_data[['z', 'y']])
+    model.fit(dataframe[['x', 'y']], signal_z)
+    signal_filtered_z = model.predict(dataframe[['x', 'y']])
 
     model = LinearRegression()
-    model.fit(accel_data[['x', 'z']], signal_y)
-    signal_filtered_y = model.predict(accel_data[['x', 'z']])
+    model.fit(dataframe[['z', 'y']], signal_x)
+    signal_filtered_x = model.predict(dataframe[['z', 'y']])
 
-    return signal_filtered_x, signal_filtered_y, signal_filtered_z
+    model = LinearRegression()
+    model.fit(dataframe[['x', 'z']], signal_y)
+    signal_filtered_y = model.predict(dataframe[['x', 'z']])
+
+    copy = dataframe.copy()
+    copy['accel_x'] = signal_filtered_x
+    copy['accel_y'] = signal_filtered_y
+    copy['accel_z'] = signal_filtered_z
+    return copy
 
 
-def cross_axys_denoising(input_csv_path):
-    x_filtered, y_filtered, z_filtered = filter(input_csv_path)
-    print(f'Processed {input_csv_path} filter signal with cross-axys')
-    return x_filtered, y_filtered, z_filtered
+def cross_axys_denoising(dataframe):
+    copy = filter(dataframe)
+    print(f'Processed {dataframe} filter signal with cross-axys')
+    return copy
