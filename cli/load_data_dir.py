@@ -3,15 +3,15 @@ import os
 
 class dataDir(): 
     
-    def askForInput(self, opt) -> str | None:
+    def askForInput(self, path) -> str | None:
         need_input = True
         extstr = None
         while need_input:
             dataDirStr = """Give a valid directory path
 nothing if you want to exit"""
             print(dataDirStr)
-            if (opt.path_to_data):
-                print(f"actual chosen path:\n{opt.path_to_data}")
+            if (path):
+                print(f"actual chosen path:\n{path}")
             command = input(">> ")
             if (command != ""):
                 if (os.path.exists(command)):

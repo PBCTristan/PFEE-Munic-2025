@@ -1,5 +1,8 @@
 from cli.load_data_dir import dataDir
 from simulator.noising import noising as cctn
+import argparse
+import json
+import os
 
 opening_string = """welcome to the pfee cli pipeline
 choose among the folowing options by typing the corresponding number"""
@@ -13,13 +16,19 @@ menuString =  """---------------------------------------
 [7] set dir for cleaned data"""
 
 class optionChooser():
-    def __init__(self):
-        self.path_to_data = None
-        self.should_noise = False
-        self.path_to_noised_data = None
-        self.denoise_Algo = None
-        self.path_to_traited_data = None
+    def __init__(self, path_to_data = None, should_noise = False, path_to_noised_data = None,
+                 denoise_Algo = None, path_to_traited_data = None):
+        self.path_to_data = path_to_data
+        self.should_noise = should_noise
+        self.path_to_noised_data = path_to_noised_data
+        self.denoise_Algo = denoise_Algo
+        self.path_to_traited_data = path_to_traited_data
 
+    @staticmethod
+    def FromJson(json: object) -> 'optionChooser':
+        print(json)
+        return optionChooser(json["path_to_data"], json["should_noise"], json["path_to_noised_data"],
+                             json["denoise_Algo"], json["path_to_traited_data"])
 
     def printInfo(self):
         print("---------------------------------------")
@@ -28,7 +37,6 @@ class optionChooser():
         print(f"path to noised data: {self.path_to_noised_data}")
         print(f"choosen denoising algorithm : {self.denoise_Algo}")
         print(f"path to traited data: {self.path_to_traited_data}")
-
 
 def menuSwitch(input: str, opt: optionChooser) -> bool:
     try:
@@ -43,7 +51,7 @@ def menuSwitch(input: str, opt: optionChooser) -> bool:
             case 3:
                 dirmenu = dataDir()
                 try:
-                    path_data = dirmenu.askForInput(opt)
+                    path_data = dirmenu.askForInput(opt.path_to_data)
                     opt.path_to_data = path_data if path_data else opt.path_to_data
                 except Exception as e:
                     print(e)
@@ -55,7 +63,7 @@ def menuSwitch(input: str, opt: optionChooser) -> bool:
             case 5:
                 dirmenu = dataDir()
                 try:
-                    path_data = dirmenu.askForInput(opt)
+                    path_data = dirmenu.askForInput(opt.path_to_noised_data)
                     opt.path_to_noised_data = path_data if path_data else opt.path_to_noised_data
                 except Exception as e:
                     print(e)
@@ -67,7 +75,7 @@ def menuSwitch(input: str, opt: optionChooser) -> bool:
             case 7:
                 dirmenu = dataDir()
                 try:
-                    path_data = dirmenu.askForInput(opt)
+                    path_data = dirmenu.askForInput(opt.path_to_traited_data)
                     opt.path_to_traited_data = path_data if path_data else opt.path_to_traited_data
                 except Exception as e:
                     print(e)
@@ -82,12 +90,31 @@ def menuSwitch(input: str, opt: optionChooser) -> bool:
 
 
 
-runLoop = True
-opt = optionChooser()
-print(opening_string)
 
-while runLoop:
-    opt.printInfo()
-    print(menuString)
-    command = input(">> ")
-    runLoop = menuSwitch(command, opt)
+if __name__ == "__main__":
+    
+    parser = argparse.ArgumentParser(description="Allow for a config file to be loaded to process data.")
+    parser.add_argument(
+        "-f",
+        '--filepath',
+        type=str,
+        help='The path to the json file to process'
+    )
+    args = parser.parse_args()
+    opt = optionChooser()
+    # Check if the filepath exists
+    if not os.path.exists(args.filepath):
+        print(f"Error: The file '{args.filepath}' does not exist.")
+    else:
+        with open(args.filepath, 'r') as f:
+            opt = optionChooser.FromJson(json.load(f))
+    
+    runLoop = True
+    
+    print(opening_string)
+
+    while runLoop:
+        opt.printInfo()
+        print(menuString)
+        command = input(">> ")
+        runLoop = menuSwitch(command, opt)
