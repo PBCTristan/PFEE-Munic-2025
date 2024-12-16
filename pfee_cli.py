@@ -38,6 +38,11 @@ class optionChooser():
         print(f"choosen denoising algorithm : {self.denoise_Algo}")
         print(f"path to traited data: {self.path_to_traited_data}")
 
+    def execPipeline(self):
+        if (self.should_noise and self.path_to_data and self.path_to_noised_data):
+            cctn.noising(self.path_to_data , self.path_to_noised_data)
+        
+
 def menuSwitch(input: str, opt: optionChooser) -> bool:
     try:
         optionNum = int( input, base=10)
