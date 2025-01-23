@@ -1,0 +1,19 @@
+{
+    "simulateur": {},
+    "raw_data_path": "",
+    "Noising": {},
+    "Noised_data_path": "",
+    "DeNoising": {
+        "algo_method": "seuil",
+        "mode": "filter",
+        "x": 2,
+        "y": 2,
+        "z": 2,
+        "cutoff": 0.1,
+        "method": "save"
+    },
+    "DeNoised_data_path": "",
+    "calibration": {},
+    "calibrated_data_path": "",
+    "ml": {}
+}

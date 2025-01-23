@@ -1,0 +1,11 @@
+{
+    "simulateur": null,
+    "raw_data_path": null,
+    "Noising": null,
+    "Noised_data_path": null,
+    "DeNoising": null,
+    "DeNoised_data_path": null,
+    "calibration": null,
+    "calibrated_data_path": null,
+    "ml": null
+}

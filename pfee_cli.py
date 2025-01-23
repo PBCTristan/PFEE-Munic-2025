@@ -1,99 +1,233 @@
-from cli.load_data_dir import dataDir
+import pandas as pd
 from simulator.noising import noising as cctn
+from signal_processing import Denoising as dn, calibration as cali
 import argparse
 import json
 import os
 
-opening_string = """welcome to the pfee cli pipeline
-choose among the folowing options by typing the corresponding number"""
-menuString =  """---------------------------------------
-[1] print hello world
-[2] exit cli
-[3] set dir for un-noised data
-[4] change if data is to be noised or not
-[5] set dir for noised data
-[6] set denoising algo
-[7] set dir for cleaned data"""
+def GetDataframeFromFile(data):
+# Check if the filepath exists
+    records = []
+    for entry in data['data']:
+        timestamp = entry.get('timestamp')
+        speed = entry.get('speed')
+        accel = entry.get('accel')  # assuming 'accel' is a list of x, y, z components
+        records.append({
+        "timestamp": timestamp,
+        "speed": speed,
+        "accel_x": accel[0],  # Acceleration x-component
+        "accel_y": accel[1],  # Acceleration y-component
+        "accel_z": accel[2]   # Acceleration z-component
+    })
+    # Create DataFrame
+    df = pd.DataFrame(records)
+    return df
+
+def json_to_object(data, cls: type[any]) -> object:
+    try:
+        # Create an object instance from the JSON data
+        # Assumes the keys in JSON match the attributes of the class
+        obj = cls(**data)
+        return obj
+    except TypeError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+class SimuConfig():
+    def __init__(self):
+        self.config: str = ""
+
+class NoisingConfig():
+    def __init__(self):
+        self.config: str = ""
+
+
+class DenoisingConfig():
+    def __init__(self,algo_method:str = "seuil", mode:str = "filter", x:int = 2, y:int = 2, z:int = 2, cutoff:float = 0.1, method:str = "save"):
+        self.algo_method = algo_method
+        self.mode = mode
+        self.x = x
+        self.y = y
+        self.z = z
+        self.cutoff = cutoff
+        self.method = method
+    
+    def denoising(self, dataframe) -> (pd.DataFrame | None):
+        return dn.denoising(algo_method=self.algo_method,
+                     dataframe=dataframe,
+                     mode=self.mode,
+                     x=self.x,
+                     y=self.y,
+                     z=self.z,
+                     cutoff=self.cutoff,
+                     method=self.method)
+
+class CalibrationConfig():
+    def __init__(self):
+        self.config: str = ""
+
+class MLConfig():
+    def __init__(self):
+        self.config: str = ""
 
 class optionChooser():
-    def __init__(self, path_to_data = None, should_noise = False, path_to_noised_data = None,
-                 denoise_Algo = None, path_to_traited_data = None):
-        self.path_to_data = path_to_data
-        self.should_noise = should_noise
-        self.path_to_noised_data = path_to_noised_data
-        self.denoise_Algo = denoise_Algo
-        self.path_to_traited_data = path_to_traited_data
+    def __init__(self):
+        # simulation subObject
+        self.simulateur: SimuConfig|None = None
+        self.raw_data_path: str|None = None
+
+        # Noising subObject
+        self.Noising: NoisingConfig|None = None
+        self.Noised_data_path: str|None = None
+
+        # DeNoising subObject
+        self.DeNoising: DenoisingConfig|None = None
+        self.DeNoised_data_path: str|None = None
+
+        # Calibration subObject
+        self.calibration: CalibrationConfig|None = None
+        self.calibrated_data_path: str|None = None
+
+        # ML subObject
+        self.ml: MLConfig|None = None
 
     @staticmethod
     def FromJson(json: object) -> 'optionChooser':
         print(json)
-        return optionChooser(json["path_to_data"], json["should_noise"], json["path_to_noised_data"],
-                             json["denoise_Algo"], json["path_to_traited_data"])
+        ret = optionChooser()
+        ret.simulateur = json_to_object(json["simulateur"], SimuConfig)
+        ret.raw_data_path = json["raw_data_path"]
+        ret.Noising = json_to_object(json["Noising"], NoisingConfig)
+        ret.Noised_data_path = json["Noised_data_path"]
+        ret.DeNoising = json_to_object(json["DeNoising"], DenoisingConfig)
+        ret.DeNoised_data_path = json["DeNoised_data_path"]
+        ret.calibration = json_to_object(json["calibration"], CalibrationConfig)
+        ret.calibrated_data_path = json["calibrated_data_path"]
+        ret.ml = json_to_object(json["ml"], CalibrationConfig)
+        return ret
+    
+    def execSimu(self):
+        # TODO
+        print("gnii")
 
-    def printInfo(self):
-        print("---------------------------------------")
-        print(f"path to data: {self.path_to_data}")
-        print(f"should noise data: {self.should_noise}")
-        print(f"path to noised data: {self.path_to_noised_data}")
-        print(f"choosen denoising algorithm : {self.denoise_Algo}")
-        print(f"path to traited data: {self.path_to_traited_data}")
+    def execNoising(self):
+        # TODO
+        # think of ways to improve convertion by using the config file 
+        try:
+            # Get a list of all files and directories in the specified path
+            all_items = os.listdir(self.raw_data_path)
+            
+            # Filter out directories, keeping only files
+            files = [(os.path.join(self.raw_data_path, item), os.path.join(self.Noised_data_path, item)) for item in all_items if os.path.isfile(os.path.join(self.raw_data_path, item))]
+            
+            for source_path, target_path in files:
+                cctn.convert_clean_to_noised(source_path, target_path)
+        except FileNotFoundError:
+            print(f"Error: The directory '{self.raw_data_path}' does not exist.")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+
+
+    def execDenoising(self):
+        try:
+            # Get a list of all files and directories in the specified path
+            all_items = os.listdir(self.Noised_data_path)
+            
+            # Filter out directories, keeping only files
+            files = [(os.path.join(self.Noised_data_path, item), os.path.join(self.DeNoised_data_path, item)) for item in all_items if os.path.isfile(os.path.join(self.Noised_data_path, item))]
+            
+            for source_path, target_path in files:
+                with open(source_path, 'r') as f:
+                    data = json.load(f)
+                df = GetDataframeFromFile(data)
+                if df:
+                    denoisedDF = self.DeNoising.denoising(df)
+                    obj = {
+                        'iscrash': data['iscrash'],
+                        'data': [{
+                            'timestamp': x[0],
+                            'accel_x': x[2],
+                            'accel_y': x[3],
+                            'accel_z': x[4],
+                        } for x in denoisedDF.values]
+                    }
+                    with open(target_path, "w") as f:
+                        json.dump(obj, f)
+
+        except FileNotFoundError:
+            print(f"Error: The directory '{self.Noised_data_path}' does not exist.")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+
+
+    def execCalibration(self):
+        try:
+            # Get a list of all files and directories in the specified path
+            all_items = os.listdir(self.DeNoised_data_path)
+            
+            # Filter out directories, keeping only files
+            files = [(os.path.join(self.DeNoised_data_path, item), os.path.join(self.calibrated_data_path, item)) for item in all_items if os.path.isfile(os.path.join(self.DeNoised_data_path, item))]
+            
+            for source_path, target_path in files:
+                with open(source_path, 'r') as f:
+                    data = json.load(f)
+                df = GetDataframeFromFile(data)
+                if df:
+                    (calibratedDF, _) = cali.calibrate(df)
+                    obj = {
+                        'iscrash': data['iscrash'],
+                        'data': [{
+                            'timestamp': x[0],
+                            'accel_x': x[2],
+                            'accel_y': x[3],
+                            'accel_z': x[4],
+                        } for x in calibratedDF.values]
+                    }
+                    with open(target_path, "w") as f:
+                        json.dump(obj, f)
+
+        except FileNotFoundError:
+            print(f"Error: The directory '{self.raw_data_path}' does not exist.")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+    
+    def execML(self):
+        try:
+            # Get a list of all files and directories in the specified path
+            all_items = os.listdir(self.calibrated_data_path)
+            
+            # Filter out directories, keeping only files
+            files = [os.path.join(self.raw_data_path, item) for item in all_items if os.path.isfile(os.path.join(self.raw_data_path, item))]
+            
+            for source_path in files:
+                print("gnii")
+        except FileNotFoundError:
+            print(f"Error: The directory '{self.raw_data_path}' does not exist.")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
 
     def execPipeline(self):
-        if (self.should_noise and self.path_to_data and self.path_to_noised_data):
-            cctn.noising(self.path_to_data , self.path_to_noised_data)
-        
 
-def menuSwitch(input: str, opt: optionChooser) -> bool:
-    try:
-        optionNum = int( input, base=10)
-        match (optionNum):
-            case 1:
-                print("hello world")
-                return True
-            case 2:
-                print("closing cli")
-                return False
-            case 3:
-                dirmenu = dataDir()
-                try:
-                    path_data = dirmenu.askForInput(opt.path_to_data)
-                    opt.path_to_data = path_data if path_data else opt.path_to_data
-                except Exception as e:
-                    print(e)
-                finally:
-                    return True
-            case 4:
-                print("add behavior to change between True and False")
-                return True
-            case 5:
-                dirmenu = dataDir()
-                try:
-                    path_data = dirmenu.askForInput(opt.path_to_noised_data)
-                    opt.path_to_noised_data = path_data if path_data else opt.path_to_noised_data
-                except Exception as e:
-                    print(e)
-                finally:
-                    return True
-            case 4:
-                print("add behavior to change for different noising algo")
-                return True
-            case 7:
-                dirmenu = dataDir()
-                try:
-                    path_data = dirmenu.askForInput(opt.path_to_traited_data)
-                    opt.path_to_traited_data = path_data if path_data else opt.path_to_traited_data
-                except Exception as e:
-                    print(e)
-                finally:
-                    return True
-            case _:
-                print("wtf")
+        # Simulation execution
+        if self.simulateur != None:
+            self.execSimu()
 
-    except:
-        print("invalid input format, must be a non-floating number")
-        return True
+        # Noising execution
+        if self.Noising != None:
+            self.execNoising()
+            
+        # Denoising execution
+        if self.DeNoising != None:
+            self.execDenoising()
 
+        # Calibration execution
+        if self.calibration != None:
+            self.execCalibration()
 
+        # ML execution
+        if self.ml != None:
+            self.execML()
 
 
 if __name__ == "__main__":
@@ -103,6 +237,7 @@ if __name__ == "__main__":
         "-f",
         '--filepath',
         type=str,
+        required=True,
         help='The path to the json file to process'
     )
     args = parser.parse_args()
@@ -114,12 +249,5 @@ if __name__ == "__main__":
         with open(args.filepath, 'r') as f:
             opt = optionChooser.FromJson(json.load(f))
     
-    runLoop = True
-    
-    print(opening_string)
+    opt.execPipeline()
 
-    while runLoop:
-        opt.printInfo()
-        print(menuString)
-        command = input(">> ")
-        runLoop = menuSwitch(command, opt)

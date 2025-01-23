@@ -56,7 +56,7 @@ def play_simulation_random(env, options):
         # Reset the environment
         _ = env.reset()
         logger.info(f"Running sim number {i}")
-        with open(f"generated_data/random_{env.spec.id}_iter_{i}.json", "w+") as f:
+        with open(f"runFolder/raw/random_{env.spec.id}_iter_{i}.json", "w+") as f:
             r = record.Record("random")
             last_action = [0, 0]
             hit = "none"

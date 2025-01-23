@@ -5,6 +5,7 @@ simulator/DonkeySimLinux/
 simulator/mycar/logs/
 unitylog.txt
 *.log
+runFolder/
 
 # Generated data
 simulator/mycar/data/

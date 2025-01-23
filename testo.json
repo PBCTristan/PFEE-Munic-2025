@@ -1,7 +1,0 @@
-{
-    "path_to_data" : "C:\\Users\\matth\\Documents\\work\\Epita\\s9\\PFEE\\pfee-munic",
-    "should_noise" : true,
-    "path_to_noised_data" : null,
-    "denoise_Algo" : null,
-    "path_to_traited_data" : "C:\\Users\\matth\\Documents\\work\\Epita\\s9\\PFEE\\pfee-munic"
-}
