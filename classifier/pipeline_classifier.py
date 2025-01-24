@@ -5,15 +5,18 @@ load_and_train pour entraîner le modèle
 test_file pour tester un fichier et savoir si il y a un crash ou non
 """
 import os
+import joblib
 import json
 import numpy as np
 import pandas as pd
 import random
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report
 from sklearn.utils import resample
+
 
 # Étape 1: Fonction pour extraire les caractéristiques des données d'entraînement (uniquement l'accéléromètre)
 def extract_features_train(data):
@@ -84,14 +87,7 @@ def adjust_crash_proportion_max_dataset(X, y, pourcent_accident):
     return X_new[shuffled_indices], y_new[shuffled_indices]
 
 # Fonction principale pour charger les données, ajuster la proportion et entraîner le modèle
-import os
-import joblib
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report
-
-def load_and_train(folder_path, pourcent_accident=0.1, save_model=False, model_name="trained_model.joblib"):
+def load_and_train(folder_path, pourcent_accident=0.1, save_model=False, model_name="trained_model_Random_forest.joblib"):
     # Charger les données d'entraînement
     X, y = load_data(folder_path)
 
@@ -124,8 +120,33 @@ def load_and_train(folder_path, pourcent_accident=0.1, save_model=False, model_n
 
     return clf, scaler
 
-# Exemple d'utilisation
-# clf, scaler = load_and_train("/chemin/vers/dossier", save_model=True, model_name="mon_modele.joblib")
+def train_outlier_model(folder_path, pourcent_accident=0.1, save_model=False, model_name="outlier_model.joblib"):
+    # Charger les données d'entraînement
+    X, y = load_data(folder_path)
+
+    # Ajuster la proportion des données "crash"
+    X, y = adjust_crash_proportion_max_dataset(X, y, pourcent_accident)
+
+    # Séparer les données en ensembles d'entraînement et de test
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+    # Normaliser/standardiser les caractéristiques
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    # Entraîner l'Isolation Forest
+    clf = IsolationForest(n_estimators=100, random_state=42, contamination=pourcent_accident)
+    clf.fit(X_train)
+
+    # Sauvegarder le modèle si demandé
+    if save_model:
+        save_path = os.path.join(os.getcwd(), model_name)
+        joblib.dump({"model": clf, "scaler": scaler}, save_path)
+        print(f"Le modèle a été sauvegardé sous : {save_path}")
+
+    return clf, scaler
+
 
 
 # Fonction pour prédire en fonction d'un seuil
