@@ -110,4 +110,4 @@ dependencies:
       - wcwidth==0.2.13
       - werkzeug==3.0.3
       - wrapt==1.14.1
-prefix: /home/garice/miniconda3/envs/donkey
+prefix: /home/italys/miniconda3/envs/donkey

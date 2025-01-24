@@ -1,14 +1,14 @@
-from denoising.seuil import seuil_denoising
-from denoising.original import original
-from denoising.square import square_denoising
-from denoising.auto_corr import auto_corr_denoising
-from denoising.cross_axys import cross_axys_denoising
-from denoising.fourrier import fourrier_denoising
-from denoising.saving import saving
+from signal_processing.denoising.seuil import seuil_denoising
+from signal_processing.denoising.original import original
+from signal_processing.denoising.square import square_denoising
+# from signal_processing.denoising.auto_corr import auto_corr_denoising
+from signal_processing.denoising.cross_axys import cross_axys_denoising
+from signal_processing.denoising.fourrier import fourrier_denoising
+from signal_processing.denoising.saving import saving
 def denoising(algo_method="seuil", dataframe=None, mode="filter", x=2, y=2, z=2, cutoff=0.1, method="save"):
     match algo_method:
-        case "autocorr":
-            return auto_corr_denoising(dataframe)
+        # case "autocorr":
+        #     return auto_corr_denoising(dataframe)
         case "fourrier":
             return fourrier_denoising(dataframe, cutoff)
         case "cross-axys":

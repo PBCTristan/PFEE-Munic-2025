@@ -1,6 +1,7 @@
 import pandas as pd
 from simulator.noising import noising as cctn
 from signal_processing import Denoising as dn, calibration as cali
+from simulator.scripts import run as simu
 import argparse
 import json
 import os
@@ -35,8 +36,17 @@ def json_to_object(data, cls: type[any]) -> object:
         print(f"An unexpected error occurred: {e}")
 
 class SimuConfig():
-    def __init__(self):
-        self.config: str = ""
+    def __init__(self, env:str="donkey-generated-track-v0", number:list[int] = [1,1,1], frames:int = 100, logfile:str|None = None, autolog:bool = True):
+        self.env:str = env
+        self.number:list[int] = number
+        self.frames:int = frames
+        self.logfile:str|None = logfile
+        self.autolog:bool = autolog
+    
+    def launchSimu(self, raw_data_path):
+        directory_path = os.path.dirname(__file__)
+        simu.runSimu(args=self, program_directory_path = directory_path, raw_data_path = raw_data_path)
+
 
 class NoisingConfig():
     def __init__(self):
@@ -108,8 +118,8 @@ class optionChooser():
         return ret
     
     def execSimu(self):
-        # TODO
-        print("gnii")
+        self.simulateur.launchSimu(self.raw_data_path)
+        
 
     def execNoising(self):
         # TODO
@@ -238,7 +248,7 @@ if __name__ == "__main__":
         '--filepath',
         type=str,
         required=True,
-        help='The path to the json file to process'
+        help='The path to the json config file to process'
     )
     args = parser.parse_args()
     opt = optionChooser()

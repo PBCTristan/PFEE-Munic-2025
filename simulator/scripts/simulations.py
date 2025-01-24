@@ -1,9 +1,10 @@
 import logging
 import numpy as np
-import record
+import simulator.scripts.record as record
 import json
 import gym
 import gym_donkeycar
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ class Simulations:
         return np.stack((steering, throttle), axis=-1)
 
     @staticmethod
-    def simulationEnumarates(simulations, noise, env, options, simu_type: int):
+    def simulationEnumarates(simulations, noise, env, options, simu_type: int, raw_data_path):
         simu_type_str = "straight"
         match simu_type:
             case 1:
@@ -48,7 +49,7 @@ class Simulations:
 
             logger.info(f"Running sim number {i}")
             with open(
-                f"generated_data/{simu_type_str}_{env.spec.id}_{i}.json", "w+"
+                os.path.join(raw_data_path, f"{simu_type_str}_{env.spec.id}_{i}.json"), "w+"
             ) as f:
                 r = record.Record(simu_type_str)
                 for _ in range(options.frames):

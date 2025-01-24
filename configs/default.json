@@ -1,8 +1,14 @@
 {
-    "simulateur": {},
-    "raw_data_path": "",
+    "simulateur": {
+        "env": "donkey-generated-track-v0",
+        "number": [1,1,1],
+        "frames": 100,
+        "logfile": "/home/italys/documents/epita/s8/pfee/pfee-munic/.logs",
+        "autolog": false
+    },
+    "raw_data_path": "/home/italys/documents/epita/s8/pfee/pfee-munic/runFolder/raw",
     "Noising": {},
-    "Noised_data_path": "",
+    "Noised_data_path": "/home/italys/documents/epita/s8/pfee/pfee-munic/runFolder/noised",
     "DeNoising": {
         "algo_method": "seuil",
         "mode": "filter",
@@ -12,8 +18,8 @@
         "cutoff": 0.1,
         "method": "save"
     },
-    "DeNoised_data_path": "",
+    "DeNoised_data_path": "/home/italys/documents/epita/s8/pfee/pfee-munic/runFolder/denoised",
     "calibration": {},
-    "calibrated_data_path": "",
+    "calibrated_data_path": "/home/italys/documents/epita/s8/pfee/pfee-munic/runFolder/cali",
     "ml": {}
 }

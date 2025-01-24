@@ -3,13 +3,14 @@ import logging
 import gym
 import numpy as np
 import json
-import record
-from simulations import Simulations
-from arg_parser import create_argument_parser
+import simulator.scripts.record as record
+from simulator.scripts.simulations import Simulations
+from simulator.scripts.arg_parser import create_argument_parser
 import sys
 import datetime
 from pathlib import Path
-from pid import PID
+from simulator.scripts.pid import PID
+import os
 
 
 logger = logging.getLogger(__name__)
@@ -19,44 +20,50 @@ stdout_handler.setLevel(logging.INFO)
 logger.addHandler(stdout_handler)
 
 
-def setup_env(env_name):
-    exe_path = "../DonkeySimLinux/donkey_sim.x86_64"
+
+def setup_env(env_name, program_directory_path: str|None =None):
+    exe_path = ""
+    if program_directory_path == None:
+        exe_path = os.path.join(os.path.abspath(__file__),"..","DonkeySimLinux","donkey_sim.x86_64")
+    else:
+        exe_path = os.path.join(program_directory_path,"simulator","DonkeySimLinux","donkey_sim.x86_64")
     port = 9091
     # We need throttle min to -1 to simulate braking
     conf = {"exe_path": exe_path, "port": port, "max_cte": sys.maxsize, "throttle_min": -1.0}
     return gym.make(env_name, conf=conf)
 
 
-def play_simulation(env, options):
+def play_simulation(env, options, raw_data_path: str):
     if (options.number[0] != 0):
-        play_simulation_straight(env, options)
+        play_simulation_straight(env, options, raw_data_path)
     if (options.number[1] != 0):
-        play_simulation_turn(env, options)
+        play_simulation_turn(env, options, raw_data_path)
     if (options.number[2] != 0):
-        play_simulation_random(env, options)
+        play_simulation_random(env, options, raw_data_path)
     env.close()
 
 
 # For now all the function does is setting the throttle to a number, without any variance
-def play_simulation_straight(env, options):
+def play_simulation_straight(env, options, raw_data_path: str):
     simulations = Simulations.straight(options.number[0])
     noise = Simulations.noise(options.frames)
-    Simulations.simulationEnumarates(simulations, noise, env, options, 0)
+    Simulations.simulationEnumarates(simulations, noise, env, options, 0, raw_data_path)
 
 
-def play_simulation_turn(env, options):
+def play_simulation_turn(env, options, raw_data_path: str):
     logger.info("playing simu with random curve")
     simulations = Simulations.randomTurnAngle(options.number[1])
     noise = Simulations.noise(options.frames)
-    Simulations.simulationEnumarates(simulations, noise, env, options, 1)
+    Simulations.simulationEnumarates(simulations, noise, env, options, 1, raw_data_path)
 
 
-def play_simulation_random(env, options):
+def play_simulation_random(env, options, raw_data_path: str):
     for i in range(options.number[2]):
         # Reset the environment
         _ = env.reset()
         logger.info(f"Running sim number {i}")
-        with open(f"runFolder/raw/random_{env.spec.id}_iter_{i}.json", "w+") as f:
+        
+        with open(os.path.join(raw_data_path, f"random_{env.spec.id}_iter_{i}.json"), "w+") as f:
             r = record.Record("random")
             last_action = [0, 0]
             hit = "none"
@@ -77,12 +84,12 @@ def play_simulation_random(env, options):
                 r.add_data(info)
             json.dump(r.to_json(), f)
 
-def play_simulation_brake(env, options):
+def play_simulation_brake(env, options, raw_data_path:str):
     for i in range(options.number):
         # Reset the environment
         _ = env.reset()
         logger.info(f"Running sim number {i}")
-        with open(f"generated_data/brake_{env.spec.id}_iter_{i}.json", "w+") as f:
+        with open(os.path.join(raw_data_path, f"brake_{env.spec.id}_iter_{i}.json"), "w+") as f:
             r = record.Record(options.type)
             info = None
             acceleration_value = np.random.uniform()
@@ -110,6 +117,43 @@ def play_simulation_brake(env, options):
             json.dump(r.to_json(), f)
     env.close()
 
+def runSimu(args, program_directory_path: str, raw_data_path:str):
+    print(f"=> {args}")
+
+    if args.logfile:
+        if args.autolog:
+            raise AssertionError("Cannot use autologfile and logfile at the same time!")
+        fileHandler = logging.FileHandler(args.logfile, mode="w+")
+        fileHandler.setLevel(logging.DEBUG)
+        logger.addHandler(fileHandler)
+    elif args.autolog:
+        path = Path("logs")
+        if not path.exists():
+            logger.warning("./logs path does not exists in current folder. Creating...")
+            path.mkdir()
+        fileHandler = logging.FileHandler(
+            os.path.join(program_directory_path,".logs",f"{datetime.datetime.now().strftime('%Y_%m_%d-%Hh%Mm%Ss.log')}"),
+            mode="w+",
+        )
+        fileHandler.setLevel(logging.DEBUG)
+        logger.addHandler(fileHandler)
+
+    if (len(args.number) < 3):
+        while (len(args.number) < 3):
+            args.number.append(0)
+    
+    print(f"numbers of runs for each type: {args.number}")
+
+    if args.env != "all":
+        env = setup_env(args.env, program_directory_path)
+        logger.info("Environment created, starting simulation...")
+        play_simulation(env, args, raw_data_path)
+    else:
+        for env_name in env_list:
+            env = setup_env(env_name, program_directory_path)
+            logger.info(f"Environment {env_name} created, starting simulation...")
+            play_simulation(env, args, raw_data_path)
+
 if __name__ == "__main__":
     parser, env_list = create_argument_parser()
     args = parser.parse_args()
@@ -126,7 +170,7 @@ if __name__ == "__main__":
             logger.warning("./logs path does not exists in current folder. Creating...")
             path.mkdir()
         fileHandler = logging.FileHandler(
-            f'./logs/{datetime.datetime.now().strftime("%Y_%m_%d-%Hh%Mm%Ss.log")}',
+            os.path.join(os.path.dirname(__file__),"logs",f"{datetime.datetime.now().strftime('%Y_%m_%d-%Hh%Mm%Ss.log')}"),
             mode="w+",
         )
         fileHandler.setLevel(logging.DEBUG)
@@ -141,9 +185,9 @@ if __name__ == "__main__":
     if args.env != "all":
         env = setup_env(args.env)
         logger.info("Environment created, starting simulation...")
-        play_simulation(env, args)
+        play_simulation(env, args, os.path.join(os.path.dirname(__file__), "generated_data"))
     else:
         for env_name in env_list:
             env = setup_env(env_name)
             logger.info(f"Environment {env_name} created, starting simulation...")
-            play_simulation(env, args)
+            play_simulation(env, args, os.path.join(os.path.dirname(__file__), "generated_data"))

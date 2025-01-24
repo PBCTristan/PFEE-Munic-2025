@@ -1,8 +1,6 @@
 import argparse
 
-
-def create_argument_parser():
-    env_list = [
+env_list = [
         "donkey-warehouse-v0",
         "donkey-generated-roads-v0",
         "donkey-avc-sparkfun-v0",
@@ -13,6 +11,9 @@ def create_argument_parser():
         "donkey-warren-track-v0",
         "donkey-circuit-launch-track-v0",
     ]
+
+def create_argument_parser():
+    
 
     parser = argparse.ArgumentParser(
         description="Python utility to generate data from donkey car."
