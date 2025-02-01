@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import matplotlib.p8yplot as plt
+import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
 
 # filter using the autocorr method
