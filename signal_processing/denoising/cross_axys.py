@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 # filter using the cross_axys method
-def filter(dataframe) -> pd.DataFrame:
+def filtered(dataframe, fuse_method) -> pd.DataFrame:
 
     dataframe['Time'] = range(1, len(dataframe) + 1)
 
@@ -28,10 +28,16 @@ def filter(dataframe) -> pd.DataFrame:
     copy['accel_x'] = signal_filtered_x
     copy['accel_y'] = signal_filtered_y
     copy['accel_z'] = signal_filtered_z
+    if (fuse_method == "mean"):
+        fused_signal = (signal_filtered_x + signal_filtered_y + signal_filtered_z) / 3 #mean
+        copy['filtered_accel'] = fused_signal
+    elif (fuse_method == "norm"):
+        fused_signal = np.sqrt(signal_filtered_x**2 + signal_filtered_y**2 + signal_filtered_z**2) #euclidian
+        copy['filtered_accel'] = fused_signal
     return copy
 
 
-def cross_axys_denoising(dataframe):
-    copy = filter(dataframe)
+def cross_axys_denoising(dataframe, fuse_method):
+    copy = filtered(dataframe, fuse_method)
     print(f'Processed {dataframe} filter signal with cross-axys')
     return copy

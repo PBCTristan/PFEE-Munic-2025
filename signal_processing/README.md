@@ -1,9 +1,9 @@
-# Conversion
-The file is used to convert a Json file into a csv file and extract the x,y,z values from the accel column into the csv with seperate columns.
-
+# Denoising
+The file is used to denoise a signal represented by a pandas Dataframe, there are 5 available methods to use. There is an option to show your original signal
 ## Usage
 
-```python Conversion.py input_file output_file true/false``` 
+```python denoising.py algo_method dataframe mode x y z cutoff method```
+
 
 The true/false option is used if you want to noise the signal.
 

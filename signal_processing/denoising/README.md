@@ -3,6 +3,8 @@ The file is used to denoise a signal in a csv file with the seuil method and the
 
 ## Usage
 
+The recommanded way to test the denoising algorithms is to use the denoising.py and select the desired method. The default one is the Seuil method. In the pipeline, this step takes a panda Dataframe as an argument and the parameters of your method and gives another denoised panda Dataframe.
+
 ```python script.py <input_csv_path> mode x_std y_std z_std mean/euclidian``` 
 
 There are 3 modes in this file:

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # filter using the square method
-def filter(dataframe:pd.DataFrame, x_degree, y_degree, z_degree) -> pd.DataFrame:
+def filtered(dataframe, x_degree, y_degree, z_degree, fuse_method) -> pd.DataFrame:
     
     dataframe['Time'] = range(1, len(dataframe) + 1)
 
@@ -28,9 +28,15 @@ def filter(dataframe:pd.DataFrame, x_degree, y_degree, z_degree) -> pd.DataFrame
     copy['accel_x'] = signal_filtered_x
     copy['accel_y'] = signal_filtered_y
     copy['accel_z'] = signal_filtered_z
+    if (fuse_method == "mean"):
+        fused_signal = (signal_filtered_x + signal_filtered_y + signal_filtered_z) / 3 #mean
+        copy['filtered_accel'] = fused_signal
+    elif (fuse_method == "norm"):
+        fused_signal = np.sqrt(signal_filtered_x**2 + signal_filtered_y**2 + signal_filtered_z**2) #euclidian
+        copy['filtered_accel'] = fused_signal
     return copy
 
-def square_denoising(dataframe, x_degree, y_degree, z_degree):
-    copy = filter(dataframe, x_degree, y_degree, z_degree)
+def square_denoising(dataframe, x_degree, y_degree, z_degree, fuse_method):
+    copy = filtered(dataframe, x_degree, y_degree, z_degree, fuse_method)
     print(f'Processed {dataframe} filter signal with square')
     return copy
