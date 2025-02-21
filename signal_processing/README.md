@@ -1,10 +1,25 @@
-# Denoising
-The file is used to denoise a signal represented by a pandas Dataframe, there are 5 available methods to use. There is an option to show your original signal
 ## Usage
 
-```python denoising.py algo_method dataframe mode x y z cutoff method```
+The recommanded way to test the denoising algorithms is to use the denoising.py and select the desired method. The default one is the Seuil method. In the pipeline, this step takes a panda Dataframe as an argument and the parameters of your method and gives another denoised panda Dataframe.
 
+```denoising(algo_method, dataframe, mode, x, y, z, cutoff, method)```
 
-The true/false option is used if you want to noise the signal.
+Here are the arguments values:
 
-The output file is created with the same name.
+algo_method is the algorithm to denoise the signal. There are 5 methods, AutoCorr, Cross-axys, Fourrier, Seuil, Square. Seuil is the default one, for more explanation you can check the README in the denoising directory.
+
+dataframe is the signal passed in the pipeline. It contains 3 columns for each axys, accel_x, accel_y and accel_z.
+
+For mode, there are 3 modes for each algorithm:
+- "filter" to keep the 3 axys
+- "mean" to fuse the denoised axys using the mean for each value.
+- "norm" to fuse the denoised axys using the norm method : sqrt(x^2 + y^2 + z^2)
+
+x, y and z are used in the seuil and square methods, the default values are 2.
+
+cutoff is used in the fourrier method, the default value is 0,1.
+
+For method, there are 3 methods in this file:
+- "show" to show the denoised signal.
+- "save" to save the denoised signal in a csv file.
+- "skip" to pass directly the dataframe to the next step of the pipeline.
