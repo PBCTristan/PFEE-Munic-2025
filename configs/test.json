@@ -9,9 +9,9 @@
     "raw_data_path": "/home/italys/documents/epita/s8/pfee/pfee-munic/runFolder/raw",
     "Noising": null,
     "Noised_data_path": "/home/italys/documents/epita/s8/pfee/pfee-munic/runFolder/noised",
-    "DeNoising": null,
-    "DeNoised_data_path": "/home/italys/documents/epita/s8/pfee/pfee-munic/runFolder/denoised",
     "calibration": null,
     "calibrated_data_path": "/home/italys/documents/epita/s8/pfee/pfee-munic/runFolder/cali",
+    "DeNoising": null,
+    "DeNoised_data_path": "/home/italys/documents/epita/s8/pfee/pfee-munic/runFolder/denoised",
     "ml": null
 }

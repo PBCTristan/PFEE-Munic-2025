@@ -9,6 +9,8 @@
     "raw_data_path": "/home/italys/documents/epita/s8/pfee/pfee-munic/runFolder/raw",
     "Noising": {},
     "Noised_data_path": "/home/italys/documents/epita/s8/pfee/pfee-munic/runFolder/noised",
+    "calibration": {},
+    "calibrated_data_path": "/home/italys/documents/epita/s8/pfee/pfee-munic/runFolder/cali",
     "DeNoising": {
         "algo_method": "seuil",
         "mode": "filter",
@@ -19,7 +21,5 @@
         "method": "save"
     },
     "DeNoised_data_path": "/home/italys/documents/epita/s8/pfee/pfee-munic/runFolder/denoised",
-    "calibration": {},
-    "calibrated_data_path": "/home/italys/documents/epita/s8/pfee/pfee-munic/runFolder/cali",
     "ml": {}
 }

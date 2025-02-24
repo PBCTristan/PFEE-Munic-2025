@@ -54,6 +54,11 @@ class NoisingConfig():
         self.config: str = ""
 
 
+
+class CalibrationConfig():
+    def __init__(self):
+        self.config: str = ""
+
 class DenoisingConfig():
     def __init__(self,algo_method:str = "seuil", mode:str = "filter", x:int = 2, y:int = 2, z:int = 2, cutoff:float = 0.1, method:str = "save"):
         self.algo_method = algo_method
@@ -73,10 +78,6 @@ class DenoisingConfig():
                      z=self.z,
                      cutoff=self.cutoff,
                      method=self.method)
-
-class CalibrationConfig():
-    def __init__(self):
-        self.config: str = ""
 
 class MLConfig():
     def __init__(self):
@@ -111,17 +112,16 @@ class optionChooser():
         ret.raw_data_path = json["raw_data_path"]
         ret.Noising = json_to_object(json["Noising"], NoisingConfig)
         ret.Noised_data_path = json["Noised_data_path"]
-        ret.DeNoising = json_to_object(json["DeNoising"], DenoisingConfig)
-        ret.DeNoised_data_path = json["DeNoised_data_path"]
         ret.calibration = json_to_object(json["calibration"], CalibrationConfig)
         ret.calibrated_data_path = json["calibrated_data_path"]
+        ret.DeNoising = json_to_object(json["DeNoising"], DenoisingConfig)
+        ret.DeNoised_data_path = json["DeNoised_data_path"]
         ret.ml = json_to_object(json["ml"], CalibrationConfig)
         return ret
     
     def execSimu(self):
         self.simulateur.launchSimu(self.raw_data_path)
         
-
     def execNoising(self):
         # think of ways to improve convertion by using the config file 
         try:
@@ -138,6 +138,35 @@ class optionChooser():
         except Exception as e:
             print(f"An unexpected error occurred in execNoising: {e}")
 
+    def execCalibration(self):
+            try:
+                # Get a list of all files and directories in the specified path
+                all_items = os.listdir(self.DeNoised_data_path)
+                
+                # Filter out directories, keeping only files
+                files = [(os.path.join(self.DeNoised_data_path, item), os.path.join(self.calibrated_data_path, item)) for item in all_items if os.path.isfile(os.path.join(self.DeNoised_data_path, item))]
+                
+                for source_path, target_path in files:
+                    with open(source_path, 'r') as f:
+                        data = json.load(f)
+                    df = GetDataframeFromFile(data)
+                    (calibratedDF, _) = cali.calibrate(df)
+                    obj = {
+                        'iscrash': data['iscrash'],
+                        'data': [{
+                            'timestamp': x[0],
+                            'accel_x': x[2],
+                            'accel_y': x[3],
+                            'accel_z': x[4],
+                        } for x in calibratedDF.values]
+                    }
+                    with open(target_path, "w") as f:
+                        json.dump(obj, f)
+
+            except FileNotFoundError:
+                print(f"Error: The directory '{self.raw_data_path}' does not exist.")
+            # except Exception as e:
+            #     print(f"An unexpected error occurred in execCalibration: {e}")
 
     def execDenoising(self):
         try:
@@ -168,38 +197,7 @@ class optionChooser():
             print(f"Error: The directory '{self.Noised_data_path}' does not exist.")
         # except Exception as e:
         #     print(f"An unexpected error occurred in execDenoising: {e}")
-
-
-    def execCalibration(self):
-        try:
-            # Get a list of all files and directories in the specified path
-            all_items = os.listdir(self.DeNoised_data_path)
-            
-            # Filter out directories, keeping only files
-            files = [(os.path.join(self.DeNoised_data_path, item), os.path.join(self.calibrated_data_path, item)) for item in all_items if os.path.isfile(os.path.join(self.DeNoised_data_path, item))]
-            
-            for source_path, target_path in files:
-                with open(source_path, 'r') as f:
-                    data = json.load(f)
-                df = GetDataframeFromFile(data)
-                (calibratedDF, _) = cali.calibrate(df)
-                obj = {
-                    'iscrash': data['iscrash'],
-                    'data': [{
-                        'timestamp': x[0],
-                        'accel_x': x[2],
-                        'accel_y': x[3],
-                        'accel_z': x[4],
-                    } for x in calibratedDF.values]
-                }
-                with open(target_path, "w") as f:
-                    json.dump(obj, f)
-
-        except FileNotFoundError:
-            print(f"Error: The directory '{self.raw_data_path}' does not exist.")
-        # except Exception as e:
-        #     print(f"An unexpected error occurred in execCalibration: {e}")
-    
+  
     def execML(self):
         try:
             # Get a list of all files and directories in the specified path
@@ -224,14 +222,14 @@ class optionChooser():
         # Noising execution
         if self.Noising != None:
             self.execNoising()
-            
-        # Denoising execution
-        if self.DeNoising != None:
-            self.execDenoising()
 
         # Calibration execution
         if self.calibration != None:
             self.execCalibration()
+
+        # Denoising execution
+        if self.DeNoising != None:
+            self.execDenoising()
 
         # ML execution
         if self.ml != None:
