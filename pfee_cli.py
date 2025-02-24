@@ -12,13 +12,11 @@ def GetDataframeFromFile(data):
     for entry in data['data']:
         timestamp = entry.get('timestamp')
         speed = entry.get('speed')
-        accel = entry.get('accel')  # assuming 'accel' is a list of x, y, z components
         records.append({
         "timestamp": timestamp,
-        "speed": speed,
-        "accel_x": accel[0],  # Acceleration x-component
-        "accel_y": accel[1],  # Acceleration y-component
-        "accel_z": accel[2]   # Acceleration z-component
+        "accel_x": entry.get('accel_x'),  # Acceleration x-component
+        "accel_y": entry.get('accel_y'),  # Acceleration y-component
+        "accel_z": entry.get('accel_z')   # Acceleration z-component
     })
     # Create DataFrame
     df = pd.DataFrame(records)
@@ -28,20 +26,23 @@ def json_to_object(data, cls: type[any]) -> object:
     try:
         # Create an object instance from the JSON data
         # Assumes the keys in JSON match the attributes of the class
-        obj = cls(**data)
-        return obj
+        if data != None:
+            obj = cls(**data)
+            return obj
+        return None
     except TypeError as e:
         print(f"Error: {e}")
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        print(f"An unexpected error occurred in json_to_object: {e}")
 
 class SimuConfig():
-    def __init__(self, env:str="donkey-generated-track-v0", number:list[int] = [1,1,1], frames:int = 100, logfile:str|None = None, autolog:bool = True):
+    def __init__(self, env:str="donkey-generated-track-v0", number:list[int] = [1,1,1,1], frames:int = 100, logfile:str|None = None, autolog:bool = True):
         self.env:str = env
         self.number:list[int] = number
         self.frames:int = frames
         self.logfile:str|None = logfile
         self.autolog:bool = autolog
+        self.noise:bool = False
     
     def launchSimu(self, raw_data_path):
         directory_path = os.path.dirname(__file__)
@@ -122,7 +123,6 @@ class optionChooser():
         
 
     def execNoising(self):
-        # TODO
         # think of ways to improve convertion by using the config file 
         try:
             # Get a list of all files and directories in the specified path
@@ -136,7 +136,7 @@ class optionChooser():
         except FileNotFoundError:
             print(f"Error: The directory '{self.raw_data_path}' does not exist.")
         except Exception as e:
-            print(f"An unexpected error occurred: {e}")
+            print(f"An unexpected error occurred in execNoising: {e}")
 
 
     def execDenoising(self):
@@ -151,24 +151,23 @@ class optionChooser():
                 with open(source_path, 'r') as f:
                     data = json.load(f)
                 df = GetDataframeFromFile(data)
-                if df:
-                    denoisedDF = self.DeNoising.denoising(df)
-                    obj = {
-                        'iscrash': data['iscrash'],
-                        'data': [{
-                            'timestamp': x[0],
-                            'accel_x': x[2],
-                            'accel_y': x[3],
-                            'accel_z': x[4],
-                        } for x in denoisedDF.values]
-                    }
-                    with open(target_path, "w") as f:
-                        json.dump(obj, f)
+                denoisedDF = self.DeNoising.denoising(df)
+                obj = {
+                    'iscrash': data['iscrash'],
+                    'data': [{
+                        'timestamp': x[0],
+                        'accel_x': x[2],
+                        'accel_y': x[3],
+                        'accel_z': x[4],
+                    } for x in denoisedDF.values]
+                }
+                with open(target_path, "w") as f:
+                    json.dump(obj, f)
 
         except FileNotFoundError:
             print(f"Error: The directory '{self.Noised_data_path}' does not exist.")
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
+        # except Exception as e:
+        #     print(f"An unexpected error occurred in execDenoising: {e}")
 
 
     def execCalibration(self):
@@ -183,24 +182,23 @@ class optionChooser():
                 with open(source_path, 'r') as f:
                     data = json.load(f)
                 df = GetDataframeFromFile(data)
-                if df:
-                    (calibratedDF, _) = cali.calibrate(df)
-                    obj = {
-                        'iscrash': data['iscrash'],
-                        'data': [{
-                            'timestamp': x[0],
-                            'accel_x': x[2],
-                            'accel_y': x[3],
-                            'accel_z': x[4],
-                        } for x in calibratedDF.values]
-                    }
-                    with open(target_path, "w") as f:
-                        json.dump(obj, f)
+                (calibratedDF, _) = cali.calibrate(df)
+                obj = {
+                    'iscrash': data['iscrash'],
+                    'data': [{
+                        'timestamp': x[0],
+                        'accel_x': x[2],
+                        'accel_y': x[3],
+                        'accel_z': x[4],
+                    } for x in calibratedDF.values]
+                }
+                with open(target_path, "w") as f:
+                    json.dump(obj, f)
 
         except FileNotFoundError:
             print(f"Error: The directory '{self.raw_data_path}' does not exist.")
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
+        # except Exception as e:
+        #     print(f"An unexpected error occurred in execCalibration: {e}")
     
     def execML(self):
         try:
@@ -214,8 +212,8 @@ class optionChooser():
                 print("gnii")
         except FileNotFoundError:
             print(f"Error: The directory '{self.raw_data_path}' does not exist.")
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
+        # except Exception as e:
+        #     print(f"An unexpected error occurred in execML: {e}")
 
     def execPipeline(self):
 

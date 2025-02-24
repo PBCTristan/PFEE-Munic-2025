@@ -61,7 +61,8 @@ class Simulations:
                     info["accel"] = info["accel"][0].tolist()
                     if info["hit"] != "none":
                         # hit detected, cutting motor by setting vector to 0
-                        action = np.full(options.number[simu_type], 0.0)
+                        action = np.full(action.shape, 0.0)
+                        
 
                     r.add_data(info)
                 json.dump(r.to_json(), f)
