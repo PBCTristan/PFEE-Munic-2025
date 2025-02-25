@@ -16,7 +16,7 @@ def GetDataframeFromFile(data):
         "timestamp": timestamp,
         "accel_x": entry.get('accel_x'),  # Acceleration x-component
         "accel_y": entry.get('accel_y'),  # Acceleration y-component
-        "accel_z": entry.get('accel_z')   # Acceleration z-component
+        "accel_z": entry.get('accel_z')  # Acceleration z-component
     })
     # Create DataFrame
     df = pd.DataFrame(records)
@@ -93,13 +93,13 @@ class optionChooser():
         self.Noising: NoisingConfig|None = None
         self.Noised_data_path: str|None = None
 
-        # DeNoising subObject
-        self.DeNoising: DenoisingConfig|None = None
-        self.DeNoised_data_path: str|None = None
-
         # Calibration subObject
         self.calibration: CalibrationConfig|None = None
         self.calibrated_data_path: str|None = None
+
+        # DeNoising subObject
+        self.DeNoising: DenoisingConfig|None = None
+        self.DeNoised_data_path: str|None = None
 
         # ML subObject
         self.ml: MLConfig|None = None
@@ -132,6 +132,7 @@ class optionChooser():
             files = [(os.path.join(self.raw_data_path, item), os.path.join(self.Noised_data_path, item)) for item in all_items if os.path.isfile(os.path.join(self.raw_data_path, item))]
             
             for source_path, target_path in files:
+                # line to change if you need to change the noising mechanism
                 cctn.convert_clean_to_noised(source_path, target_path)
         except FileNotFoundError:
             print(f"Error: The directory '{self.raw_data_path}' does not exist.")
@@ -139,55 +140,60 @@ class optionChooser():
             print(f"An unexpected error occurred in execNoising: {e}")
 
     def execCalibration(self):
-            try:
-                # Get a list of all files and directories in the specified path
-                all_items = os.listdir(self.DeNoised_data_path)
-                
-                # Filter out directories, keeping only files
-                files = [(os.path.join(self.DeNoised_data_path, item), os.path.join(self.calibrated_data_path, item)) for item in all_items if os.path.isfile(os.path.join(self.DeNoised_data_path, item))]
-                
-                for source_path, target_path in files:
-                    with open(source_path, 'r') as f:
-                        data = json.load(f)
-                    df = GetDataframeFromFile(data)
-                    (calibratedDF, _) = cali.calibrate(df)
-                    obj = {
-                        'iscrash': data['iscrash'],
-                        'data': [{
-                            'timestamp': x[0],
-                            'accel_x': x[2],
-                            'accel_y': x[3],
-                            'accel_z': x[4],
-                        } for x in calibratedDF.values]
-                    }
-                    with open(target_path, "w") as f:
-                        json.dump(obj, f)
+        try:
+            # Get a list of all files and directories in the specified path
+            all_items = os.listdir(self.Noised_data_path)
+            print(all_items)
+            
+            # Filter out directories, keeping only files
+            files = [(os.path.join(self.Noised_data_path, item), os.path.join(self.calibrated_data_path, item)) for item in all_items if os.path.isfile(os.path.join(self.Noised_data_path, item))]
+            
+            for source_path, target_path in files:
+                with open(source_path, 'r') as f:
+                    data = json.load(f)
+                df = GetDataframeFromFile(data)
+                df = df.rename(columns={"accel_x": "x", "accel_y": "y", "accel_z": "z"})
 
-            except FileNotFoundError:
-                print(f"Error: The directory '{self.raw_data_path}' does not exist.")
-            # except Exception as e:
-            #     print(f"An unexpected error occurred in execCalibration: {e}")
+                (calibratedDF, _) = cali.calibrate(df)
+                obj = {
+                    'iscrash': data['iscrash'],
+                    'data': [{
+                        'accel_x': x[0],
+                        'accel_y': x[1],
+                        'accel_z': x[2],
+                    } for x in calibratedDF.values]
+                }
+                with open(target_path, "w") as f:
+                    json.dump(obj, f)
+
+        except FileNotFoundError:
+            print(f"Error: The directory '{self.raw_data_path}' does not exist.")
+        # except Exception as e:
+        #     print(f"An unexpected error occurred in execCalibration: {e}")
 
     def execDenoising(self):
         try:
             # Get a list of all files and directories in the specified path
-            all_items = os.listdir(self.Noised_data_path)
+            all_items = os.listdir(self.calibrated_data_path)
             
             # Filter out directories, keeping only files
-            files = [(os.path.join(self.Noised_data_path, item), os.path.join(self.DeNoised_data_path, item)) for item in all_items if os.path.isfile(os.path.join(self.Noised_data_path, item))]
+            files = [(os.path.join(self.calibrated_data_path, item), os.path.join(self.DeNoised_data_path, item)) for item in all_items if os.path.isfile(os.path.join(self.calibrated_data_path, item))]
             
             for source_path, target_path in files:
                 with open(source_path, 'r') as f:
                     data = json.load(f)
                 df = GetDataframeFromFile(data)
                 denoisedDF = self.DeNoising.denoising(df)
+                
+                # for x in denoisedDF.values:
+                #     print(x)
+
                 obj = {
                     'iscrash': data['iscrash'],
                     'data': [{
-                        'timestamp': x[0],
-                        'accel_x': x[2],
-                        'accel_y': x[3],
-                        'accel_z': x[4],
+                        'accel_x': x[1],
+                        'accel_y': x[2],
+                        'accel_z': x[3],
                     } for x in denoisedDF.values]
                 }
                 with open(target_path, "w") as f:
@@ -201,15 +207,15 @@ class optionChooser():
     def execML(self):
         try:
             # Get a list of all files and directories in the specified path
-            all_items = os.listdir(self.calibrated_data_path)
+            all_items = os.listdir(self.DeNoised_data_path)
             
             # Filter out directories, keeping only files
-            files = [os.path.join(self.raw_data_path, item) for item in all_items if os.path.isfile(os.path.join(self.raw_data_path, item))]
+            files = [os.path.join(self.DeNoised_data_path, item) for item in all_items if os.path.isfile(os.path.join(self.DeNoised_data_path, item))]
             
             for source_path in files:
                 print("gnii")
         except FileNotFoundError:
-            print(f"Error: The directory '{self.raw_data_path}' does not exist.")
+            print(f"Error: The directory '{self.DeNoised_data_path}' does not exist.")
         # except Exception as e:
         #     print(f"An unexpected error occurred in execML: {e}")
 

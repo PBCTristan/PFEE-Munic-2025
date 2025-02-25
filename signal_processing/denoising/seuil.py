@@ -81,8 +81,10 @@ def seuil_denoising(dataframe, mode, x_std, y_std, z_std, method):
         match mode:
             case "fused":
                 fused(dataframe, x_std, y_std, z_std, method)
-                print(f'Processed {dataframe} fused signal with seuil')
+                # print(f'Processed {dataframe} fused signal with seuil')
+                # print(dataframe)
             case _:
                 new_dataframe = filter(dataframe, x_std, y_std, z_std)
-                print(f'Processed {dataframe} filter signal with seuil')
+                # print(f'Processed {dataframe} filter signal with seuil')
+                # print(dataframe)
                 return new_dataframe
