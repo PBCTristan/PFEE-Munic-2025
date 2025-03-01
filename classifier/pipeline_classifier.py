@@ -11,11 +11,13 @@ import numpy as np
 import pandas as pd
 import random
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report
 from sklearn.utils import resample
+
 
 
 # Étape 1: Fonction pour extraire les caractéristiques des données d'entraînement (uniquement l'accéléromètre)
@@ -87,66 +89,65 @@ def adjust_crash_proportion_max_dataset(X, y, pourcent_accident):
     return X_new[shuffled_indices], y_new[shuffled_indices]
 
 # Fonction principale pour charger les données, ajuster la proportion et entraîner le modèle
-def load_and_train(folder_path, pourcent_accident=0.1, save_model=False, model_name="trained_model_Random_forest.joblib"):
+def load_and_train(folder_path, pourcent_accident=0.1, save_model=False, model_name="trained_model_Random_forest.joblib", n_estimators=100, max_depth=None, min_samples_split=2, min_samples_leaf=1):
     # Charger les données d'entraînement
     X, y = load_data(folder_path)
-
+    
     # Ajuster la proportion des données "crash"
     X, y = adjust_crash_proportion_max_dataset(X, y, pourcent_accident)
-
+    
     # Séparer les données en ensembles d'entraînement et de test
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-
+    
     # Normaliser/standardiser les caractéristiques
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
-
+    
     # Entraîner un classificateur (Random Forest dans ce cas)
-    clf = RandomForestClassifier(n_estimators=100, random_state=42)
+    clf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf, random_state=42)
     clf.fit(X_train, y_train)
-
+    
     # Prédire les probabilités (pour appliquer des seuils ensuite)
     y_prob = clf.predict_proba(X_test)[:, 1]  # Probabilité pour la classe 'crash'
-
+    
     print("Rapport de classification sur les données de test :")
     print(classification_report(y_test, clf.predict(X_test)))
-
+    
     # Sauvegarder le modèle si demandé
     if save_model:
         save_path = os.path.join(os.getcwd(), model_name)
         joblib.dump({"model": clf, "scaler": scaler}, save_path)
         print(f"Le modèle a été sauvegardé sous : {save_path}")
-
+    
     return clf, scaler
 
-def train_outlier_model(folder_path, pourcent_accident=0.1, save_model=False, model_name="outlier_model.joblib"):
+def train_outlier_model(folder_path, pourcent_accident=0.1, save_model=False, model_name="outlier_model.joblib", n_estimators=100, contamination=0.1):
     # Charger les données d'entraînement
     X, y = load_data(folder_path)
-
+    
     # Ajuster la proportion des données "crash"
     X, y = adjust_crash_proportion_max_dataset(X, y, pourcent_accident)
-
+    
     # Séparer les données en ensembles d'entraînement et de test
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-
+    
     # Normaliser/standardiser les caractéristiques
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
-
+    
     # Entraîner l'Isolation Forest
-    clf = IsolationForest(n_estimators=100, random_state=42, contamination=pourcent_accident)
+    clf = IsolationForest(n_estimators=n_estimators, random_state=42, contamination=contamination)
     clf.fit(X_train)
-
+    
     # Sauvegarder le modèle si demandé
     if save_model:
         save_path = os.path.join(os.getcwd(), model_name)
         joblib.dump({"model": clf, "scaler": scaler}, save_path)
         print(f"Le modèle a été sauvegardé sous : {save_path}")
-
+    
     return clf, scaler
-
 
 
 # Fonction pour prédire en fonction d'un seuil
@@ -196,3 +197,91 @@ def test_file(file_path, scaler, clf, threshold=0.7):
         print(f"Le fichier {file_path} contient des données montrant : \nPrédiction: Crash détecté")
     else:
         print(f"Le fichier {file_path} contient des données montrant : \nPrédiction: Pas de crash")
+
+
+
+def hyperparameter_search_Random_forest(folder_path, param_grid=None, pourcent_accident=0.1, cv=3):
+    """
+    Effectue une recherche d'hyperparamètres pour le RandomForestClassifier.
+    
+    Arguments :
+    - folder_path : str, chemin vers le dossier contenant les données d'entraînement.
+    - param_grid : dict, grille des hyperparamètres à tester.
+    - pourcent_accident : float, proportion des données de crash après rééchantillonnage.
+    - cv : int, nombre de folds pour la validation croisée.
+    
+    Retourne :
+    - Le meilleur modèle entraîné.
+    - Les meilleurs hyperparamètres trouvés.
+    """
+    if param_grid is None:
+        param_grid = {
+            'n_estimators': [50, 100, 200],
+            'max_depth': [None, 10, 20],
+            'min_samples_split': [2, 5, 10],
+            'min_samples_leaf': [1, 2, 4]
+        }
+    
+    # Charger les données
+    X, y = load_data(folder_path)
+    X, y = adjust_crash_proportion_max_dataset(X, y, pourcent_accident)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    
+    # Normaliser les données
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+    
+    # Instancier le modèle de base
+    clf = RandomForestClassifier(random_state=42)
+    
+    # GridSearchCV pour trouver les meilleurs hyperparamètres
+    grid_search = GridSearchCV(clf, param_grid, cv=cv, scoring='f1', n_jobs=-1, verbose=1)
+    grid_search.fit(X_train, y_train)
+    
+    print("Meilleurs hyperparamètres :", grid_search.best_params_)
+    print("Meilleur score F1 :", grid_search.best_score_)
+    
+    return grid_search.best_estimator_, grid_search.best_params_
+
+def hyperparameter_search_outlier(folder_path, param_grid=None, pourcent_accident=0.1, cv=3):
+    """
+    Effectue une recherche d'hyperparamètres pour l'IsolationForest.
+    
+    Arguments :
+    - folder_path : str, chemin vers le dossier contenant les données d'entraînement.
+    - param_grid : dict, grille des hyperparamètres à tester.
+    - pourcent_accident : float, proportion des données de crash après rééchantillonnage.
+    - cv : int, nombre de folds pour la validation croisée.
+    
+    Retourne :
+    - Le meilleur modèle entraîné.
+    - Les meilleurs hyperparamètres trouvés.
+    """
+    if param_grid is None:
+        param_grid = {
+            'n_estimators': [50, 100, 200],
+            'contamination': [0.05, 0.1, 0.2]
+        }
+    
+    # Charger les données
+    X, y = load_data(folder_path)
+    X, y = adjust_crash_proportion_max_dataset(X, y, pourcent_accident)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    
+    # Normaliser les données
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+    
+    # Instancier le modèle de base
+    clf = IsolationForest(random_state=42)
+    
+    # GridSearchCV pour trouver les meilleurs hyperparamètres
+    grid_search = GridSearchCV(clf, param_grid, cv=cv, scoring='accuracy', n_jobs=-1, verbose=1)
+    grid_search.fit(X_train, y_train)
+    
+    print("Meilleurs hyperparamètres :", grid_search.best_params_)
+    print("Meilleur score :", grid_search.best_score_)    
+    return grid_search.best_estimator_, grid_search.best_params_
+
